@@ -22,6 +22,7 @@ class Config:
     PERSONAL_ADDRESS = os.getenv('PERSONAL_ADDRESS', 'Musterstraße 1, 12345 Musterstadt')
     PERSONAL_PHONE = os.getenv('PERSONAL_PHONE', '+49 123 456789')
     PERSONAL_EMAIL = os.getenv('PERSONAL_EMAIL', 'max.mustermann@email.com')
+    PERSONAL_GITHUB = os.getenv('PERSONAL_GITHUB', 'https://github.com/username')
     PERSONAL_EXPERIENCE = os.getenv('PERSONAL_EXPERIENCE', '3 Jahre Berufserfahrung')
     PERSONAL_SKILLS = os.getenv('PERSONAL_SKILLS', 'Python, JavaScript, Projektmanagement')
     
@@ -54,6 +55,7 @@ class Config:
             'address': cls.PERSONAL_ADDRESS,
             'phone': cls.PERSONAL_PHONE,
             'email': cls.PERSONAL_EMAIL,
+            'github': cls.PERSONAL_GITHUB,
             'experience': cls.PERSONAL_EXPERIENCE,
             'skills': cls.PERSONAL_SKILLS
         }

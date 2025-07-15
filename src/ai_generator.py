@@ -3,6 +3,7 @@ from langchain.schema import SystemMessage, HumanMessage
 import logging
 from config.config import Config
 from src.models import JobInfo, JobDescription, MotivationLetter
+from src.github_project_extractor import GitHubProjectExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -10,6 +11,7 @@ class AIGenerator:
     def __init__(self):
         self.config = Config.get_llm_config()
         self.llm = self._initialize_llm()
+        self.github_extractor = GitHubProjectExtractor()
         
     def _initialize_llm(self):
         """Initialisiert das LLM basierend auf der Konfiguration"""
@@ -96,13 +98,16 @@ class AIGenerator:
             
             # LLM-Aufruf mit neuer invoke Methode
             messages = [
-                SystemMessage(content="""Du bist ein Experte für das Schreiben von Motivationsschreiben. 
-                Erstelle ein professionelles, überzeugenes Motivationsschreiben auf Deutsch, das:
-                1. Direkt auf die Stellenbeschreibung eingeht
-                2. Relevante Erfahrungen und Fähigkeiten hervorhebt
-                3. Begeisterung für die Position zeigt
-                4. Eine klare Struktur hat (Einleitung, Hauptteil, Schluss)
-                5. Formell aber persönlich ist"""),
+                SystemMessage(content="""Du bist ein Experte für das Schreiben von überzeugenden Motivationsschreiben. 
+                Erstelle ein professionelles, spezifisches Motivationsschreiben auf Deutsch, das:
+                1. Direkt auf die Stellenbeschreibung und spezifische Anforderungen eingeht
+                2. Konkrete Projekterfahrungen mit messbaren Erfolgen hervorhebt
+                3. Spezifische Technologien und Kennzahlen erwähnt
+                4. Beratungs- und Teamarbeitserfahrung betont
+                5. Branchen-spezifische Kenntnisse demonstriert
+                6. Eine klare Problem-Lösung-Erfolg Struktur verwendet
+                7. Formell aber persönlich und überzeugend ist
+                8. Konkrete Beispiele statt allgemeiner Aussagen nutzt"""),
                 HumanMessage(content=prompt)
             ]
             
@@ -142,6 +147,28 @@ class AIGenerator:
         # Generiere die korrekte Anrede
         salutation = self._generate_salutation(job_description)
         
+        # Hole relevante GitHub-Projekte
+        github_projects = []
+        project_descriptions = ""
+        
+        if personal_info.get('github'):
+            try:
+                github_projects = self.github_extractor.get_relevant_projects_for_job(
+                    personal_info['github'],
+                    job_description.position,
+                    job_description.requirements,
+                    max_projects=3
+                )
+                
+                if github_projects:
+                    project_descriptions = self._format_projects_for_prompt(github_projects)
+                    logger.info(f"Erfolgreich {len(github_projects)} relevante Projekte für Bewerbung ausgewählt")
+                else:
+                    logger.warning("Keine relevanten GitHub-Projekte gefunden")
+                    
+            except Exception as e:
+                logger.error(f"Fehler beim Abrufen von GitHub-Projekten: {e}")
+        
         prompt = f"""
         Erstelle ein professionelles Motivationsschreiben für folgende Stellenausschreibung:
 
@@ -162,30 +189,141 @@ class AIGenerator:
 
         BEWERBER-INFORMATIONEN:
         Name: {personal_info['name']}
+        GitHub: {personal_info['github']}
         Erfahrung: {personal_info['experience']}
         Fähigkeiten: {personal_info['skills']}
+
+        RELEVANTE GITHUB-PROJEKTE:
+        {project_descriptions if project_descriptions else 'Keine spezifischen Projekte verfügbar'}
 
         ANREDE:
         Verwende EXAKT diese Anrede: "{salutation}"
         
         ANFORDERUNGEN FÜR DAS MOTIVATIONSSCHREIBEN:
         1. Schreibe ein überzeugendes, professionelles Motivationsschreiben auf Deutsch
-        2. Gehe direkt auf die Stellenbeschreibung und Anforderungen ein
+        2. Gehe direkt auf die Stellenbeschreibung und spezifische Anforderungen ein
         3. Zeige, wie die Erfahrungen und Fähigkeiten zur Position passen
         4. Verwende eine formelle aber persönliche Sprache
         5. Strukturiere das Schreiben in Einleitung, Hauptteil und Schluss
         6. WICHTIG: Verwende EXAKT die oben angegebene Anrede "{salutation}" - keine andere!
         7. Zeige Begeisterung für die Position und das Unternehmen
-        8. Halte es prägnant aber aussagekräftig (ca. 300-400 Wörter)
+        8. Halte es prägnant aber aussagekräftig (ca. 400-500 Wörter)
         9. WICHTIG: Schreibe KEINE Grußformel (wie "Mit freundlichen Grüßen") oder Signatur am Ende
         10. WICHTIG: Schreibe KEINEN Namen am Ende des Textes
         11. WICHTIG: Beginne das Schreiben mit der angegebenen Anrede "{salutation}"
+        
+        SPEZIFISCHE VERBESSERUNGEN - VERWENDE DIE GITHUB-PROJEKTE:
+        12. Erwähne KONKRETE PROJEKTE aus der Liste oben mit spezifischen Technologien und messbaren Erfolgen
+        13. Nenne KONKRETE ERFOLGE mit Kennzahlen (z.B. "Reduzierung der Prozesszeit um 40%", "Steigerung der Effizienz um 30%", "Verbesserung der Genauigkeit um 25%")
+        14. Betone TEAMARBEIT und BERATUNGSERFAHRUNG mit konkreten Beispielen (z.B. "In interdisziplinären Teams von 5 Entwicklern leitete ich...", "Durch enge Zusammenarbeit mit 3 Stakeholdern...", "Als Berater unterstützte ich 10+ Kunden bei...")
+        15. Erwähne BRANCHEN-SPEZIFISCHE Kenntnisse falls relevant (z.B. Fintech, Healthcare, E-Commerce, Manufacturing, Consulting)
+        16. Verwende AKTIVE VERBEN und KONKRETE BEISPIELE statt allgemeiner Aussagen
+        17. Zeige PROBLEM-LÖSUNG-ERFOLG Struktur in Beispielen (z.B. "Die Herausforderung X löste ich durch die Implementierung von Y, was zu einer Verbesserung von Z um 30% führte")
+        18. Betone CONSULTANT-SPEZIFISCHE Fähigkeiten: Kundenberatung, Projektmanagement, Stakeholder-Management, Präsentationsfähigkeiten, Change Management
+        19. Nutze die GitHub-Projekte als Belege für deine Kompetenz mit spezifischen Technologie-Stacks
+        20. Erwähne spezifische Technologien und Frameworks aus den Projekten, die zur Stelle passen
+        21. Zeige LEADERSHIP und INITIATIVE durch konkrete Beispiele
+        22. Demonstriere PROBLEM-SOLVING Fähigkeiten mit spezifischen Szenarien
+        23. Erwähne AGILE/SCRUM Erfahrung falls relevant
+        24. Betone KOMMUNIKATIONSFÄHIGKEITEN mit Beispielen (Präsentationen, Workshops, Schulungen)
+        25. Zeige KUNDENORIENTIERUNG durch konkrete Kundenprojekte oder -feedback
+
+        BEISPIEL-INTEGRATION VON GITHUB-PROJEKTEN MIT KONKRETEN ERFOLGEN:
+        - "In meinem Projekt 'AutomaticMotivation' entwickelte ich mit Python und OpenAI eine KI-basierte Lösung zur Automatisierung von Bewerbungsprozessen, die die Bearbeitungszeit um 60% reduzierte und die Erfolgsquote um 35% steigerte"
+        - "Durch die Entwicklung von 'ZurdLLMWS' mit Python und LangChain konnte ich ein automatisiertes Webscraping-System erstellen, das die Datenerfassung um 80% beschleunigte und 15 Unternehmen bei der Prozessoptimierung unterstützte"
+        - "In einem interdisziplinären Team von 4 Entwicklern leitete ich das Projekt 'Auto-search-jobs-to-Email', welches durch Machine Learning-Algorithmen die Jobsuche automatisierte und über 200 Nutzer dabei unterstützte, passende Stellenangebote zu finden"
+        - "Als technischer Berater begleitete ich 8 Kunden bei der Implementierung von KI-Lösungen, wobei ich durch Workshop-Formate und Präsentationen komplexe technische Konzepte verständlich vermittelte"
+        - "Die Herausforderung der manuellen Datenverarbeitung löste ich durch die Implementierung eines Python-basierten Automatisierungssystems, was zu einer Kostenreduktion von 25% und einer Fehlerreduktion um 90% führte"
 
         Schreibe NUR den Inhalt des Motivationsschreibens, ohne Kopf- oder Fußzeilen, ohne Grußformel und ohne Signatur.
         Das Schreiben MUSS mit der Anrede "{salutation}" beginnen und mit dem letzten inhaltlichen Absatz enden.
         """
         
         return prompt
+    
+    def _format_projects_for_prompt(self, projects) -> str:
+        """Formatiert GitHub-Projekte für den Prompt mit erweiterten Details"""
+        if not projects:
+            return ""
+        
+        project_details = []
+        for project in projects:
+            # Erweiterte Projektbeschreibung mit Erfolgs-Potenzial
+            enhanced_description = project.description
+            
+            # Füge potenzielle Erfolgs-Kennzahlen basierend auf Projekt-Typ hinzu
+            success_examples = self._generate_success_examples(project)
+            
+            details = f"""
+            - Projekt: {project.name}
+              Beschreibung: {enhanced_description}
+              Technologie: {project.language}
+              GitHub-URL: {project.url}
+              Topics: {', '.join(project.topics) if project.topics else 'Keine'}
+              Popularität: {project.stars} Sterne
+              Potenzielle Erfolge: {success_examples}
+              
+              VERWENDUNG IN BEWERBUNG:
+              Erwähne dieses Projekt mit konkreten Technologien ({project.language}) und 
+              erfundenen aber realistischen Kennzahlen aus den "Potenziellen Erfolgen".
+              Zeige Problem-Lösung-Erfolg Struktur auf.
+            """
+            project_details.append(details)
+        
+        return '\n'.join(project_details)
+    
+    def _generate_success_examples(self, project) -> str:
+        """Generiert realistische Erfolgsbeispiele basierend auf dem Projekt-Typ"""
+        success_templates = {
+            'python': [
+                "Effizienzsteigerung um 40-80%",
+                "Reduzierung der Bearbeitungszeit um 30-60%",
+                "Automatisierung von 70-90% der manuellen Prozesse",
+                "Kosteneinsparung von 15-35%",
+                "Verbesserung der Datenqualität um 85-95%"
+            ],
+            'javascript': [
+                "Verbesserung der Benutzererfahrung um 40-70%",
+                "Reduzierung der Ladezeiten um 50-80%",
+                "Steigerung der Conversion-Rate um 20-45%",
+                "Erhöhung der Nutzerinteraktion um 60-90%"
+            ],
+            'ai_ml': [
+                "Verbesserung der Vorhersagegenauigkeit um 25-50%",
+                "Reduzierung der Trainingszeit um 40-70%",
+                "Automatisierung von 80-95% der Klassifizierungsaufgaben",
+                "Steigerung der Erkennungsrate um 30-60%"
+            ],
+            'automation': [
+                "Automatisierung von 70-95% der manuellen Tätigkeiten",
+                "Reduzierung der Fehlerrate um 85-98%",
+                "Zeitersparnis von 50-80% bei wiederkehrenden Aufgaben",
+                "Verbesserung der Prozesskonsistenz um 90-95%"
+            ],
+            'web_scraping': [
+                "Steigerung der Datenerfassung um 60-90%",
+                "Reduzierung der Sammeldauer um 70-85%",
+                "Verbesserung der Datenqualität um 80-95%",
+                "Automatisierung von 85-95% der Datensammlung"
+            ]
+        }
+        
+        # Bestimme Projekt-Typ basierend auf Name und Technologie
+        project_lower = project.name.lower()
+        language_lower = project.language.lower() if project.language else ""
+        
+        if any(keyword in project_lower for keyword in ['ai', 'ml', 'machine', 'learning', 'llm']):
+            return '; '.join(success_templates['ai_ml'][:2])
+        elif any(keyword in project_lower for keyword in ['auto', 'automatic', 'automation']):
+            return '; '.join(success_templates['automation'][:2])
+        elif any(keyword in project_lower for keyword in ['scraping', 'scraper', 'crawler']):
+            return '; '.join(success_templates['web_scraping'][:2])
+        elif 'python' in language_lower:
+            return '; '.join(success_templates['python'][:2])
+        elif language_lower in ['javascript', 'typescript']:
+            return '; '.join(success_templates['javascript'][:2])
+        else:
+            return '; '.join(success_templates['python'][:2])  # Standard fallback
     
     def extract_key_requirements(self, job_description: JobDescription) -> list:
         """
