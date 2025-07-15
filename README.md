@@ -544,7 +544,7 @@ Dieses Projekt ist unter der **MIT Lizenz** veröffentlicht - siehe [LICENSE](LI
 
 ## 🆘 Support & Community
 
-- 📧 **E-Mail:** support@automaticmotivation.ai
+- 📧 **E-Mail:** dzurmuehle@gmail.com
 - 🐛 **Issues:** [GitHub Issues](https://github.com/zurd46/AutomaticMotivation/issues)
 - 💬 **Diskussionen:** [GitHub Discussions](https://github.com/zurd46/AutomaticMotivation/discussions)
 - 📚 **Wiki:** [GitHub Wiki](https://github.com/zurd46/AutomaticMotivation/wiki)
