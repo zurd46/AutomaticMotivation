@@ -107,10 +107,10 @@ PERSONAL_GITHUB=https://github.com/IhrUsername
 
 # Persönliche Informationen für ultra-spezifische Bewerbungen
 PERSONAL_NAME=Daniel Zurmühle
-PERSONAL_ADDRESS=Hinterdorfstrasse 12, 6235 Winikon
-PERSONAL_PHONE=+41 79 127 55 54
-PERSONAL_EMAIL=dzurmuehle@gmail.com
-PERSONAL_EXPERIENCE=4+ Jahre Berufserfahrung in Python, KI und Automatisierung
+PERSONAL_ADDRESS=Teststrasse 12, 6000 Test
+PERSONAL_PHONE=+41 79 555 55 55
+PERSONAL_EMAIL=test@gmail.com
+PERSONAL_EXPERIENCE=4+ Jahre Berufserfahrung in .....
 PERSONAL_SKILLS=Python, Node.js, TypeScript, JAVA, PHP, LangChain, OpenAI, AI-Generierung, AI Agent Systeme, Automatisierung, Webentwicklung, Datenanalyse
 
 # OpenRouter API Konfiguration (empfohlen für beste Ergebnisse)
