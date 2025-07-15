@@ -1,0 +1,2 @@
+# Diese Datei sorgt dafür, dass der output/ Ordner in Git verbleibt
+# Generierte PDF-Dateien werden durch .gitignore ausgeschlossen
