@@ -96,8 +96,8 @@ def analyze_pdf(pdf_path):
 
 if __name__ == "__main__":
     # Analysiere beide Dateien
-    docx_path = 'output/Motivationsschreiben_Template_PDF_Test_Company_160725.docx'
-    pdf_path = 'output/Motivationsschreiben_Template_PDF_Test_Company_Test_Address_160725.pdf'
+    docx_path = 'output/Motivationsschreiben_Rocken_Partner_Energieversorger_in_der_Zentralschweiz_160725.docx'
+    pdf_path = 'output/Motivationsschreiben_Rocken®_Partner_(Energieversorger_in_der_Zentralschweiz)_160725.pdf'
     
     analyze_docx(docx_path)
     analyze_pdf(pdf_path)

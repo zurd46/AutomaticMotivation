@@ -72,15 +72,41 @@ class Config:
     
     @classmethod
     def get_github_project_urls(cls):
-        """Gibt bekannte GitHub-Projekt-URLs zurück"""
+        """Gibt GitHub-Projekt-URLs zurück, dynamisch von der GitHub-API geladen"""
         username = cls.get_github_username()
         if not username:
             return {}
         
-        # Bekannte Projekte - könnte später aus API geladen werden
-        known_projects = ['AutomaticMotivation', 'ZurdLLMWS', 'Auto-search-jobs']
-        
+        # Lade Projekte dynamisch von GitHub-API
+        try:
+            import requests
+            api_url = f'https://api.github.com/users/{username}/repos'
+            response = requests.get(api_url, timeout=10)
+            
+            if response.status_code == 200:
+                repos = response.json()
+                # Filtere nur öffentliche Repositories
+                project_urls = {}
+                for repo in repos:
+                    if not repo.get('private', True):  # Nur öffentliche Repos
+                        project_name = repo['name']
+                        project_url = repo['html_url']
+                        project_urls[project_name] = project_url
+                
+                return project_urls
+            else:
+                print(f"GitHub API Fehler: {response.status_code}")
+                return cls._get_fallback_projects(username)
+                
+        except Exception as e:
+            print(f"Fehler beim Laden der GitHub-Projekte: {e}")
+            return cls._get_fallback_projects(username)
+    
+    @classmethod
+    def _get_fallback_projects(cls, username):
+        """Fallback-Projekte falls GitHub-API nicht verfügbar ist"""
+        fallback_projects = ['AutomaticMotivation', 'ZurdLLMWS', 'Auto-search-jobs']
         return {
             project: f'https://github.com/{username}/{project}'
-            for project in known_projects
+            for project in fallback_projects
         }

@@ -250,11 +250,15 @@ class AIGenerator:
         BEISPIEL-INTEGRATION VON GITHUB-PROJEKTEN MIT KONKRETEN ERFOLGEN:
         - "In meinem Projekt 'AutomaticMotivation' entwickelte ich mit Python und OpenAI eine KI-basierte Lösung zur Automatisierung von Bewerbungsprozessen, die die Bearbeitungszeit um 60% reduzierte und die Erfolgsquote um 35% steigerte"
         - "Durch die Entwicklung von 'ZurdLLMWS' mit Python und LangChain konnte ich ein automatisiertes Webscraping-System erstellen, das die Datenerfassung um 80% beschleunigte und bei der Prozessoptimierung unterstützte"
-        - "In einem interdisziplinären Team leitete ich das Projekt 'Auto-search-jobs-to-Email', welches durch Machine Learning-Algorithmen die Jobsuche automatisierte und viele Nutzer dabei unterstützte, passende Stellenangebote zu finden"
+        - "In einem interdisziplinären Team leitete ich das Projekt 'Auto-search-jobs', welches durch Machine Learning-Algorithmen die Jobsuche automatisierte und viele Nutzer dabei unterstützte, passende Stellenangebote zu finden"
         - "Als technischer Berater begleitete ich verschiedene Kunden bei der Implementierung von KI-Lösungen, wobei ich durch Workshop-Formate und Präsentationen komplexe technische Konzepte verständlich vermittelte"
         - "Die Herausforderung der manuellen Datenverarbeitung löste ich durch die Implementierung eines Python-basierten Automatisierungssystems, was zu einer Kostenreduktion von 25% und einer Fehlerreduktion um 90% führte"
         
-        WICHTIG: Erwähne NIEMALS spezifische Unternehmensnamen aus der LinkedIn-Berufserfahrung. Verwende stattdessen:
+        WICHTIG ZU BEACHTEN: 
+        - Erwähne UNBEDINGT mindestens 2-3 der folgenden Hauptprojekte in deinem Schreiben: AutomaticMotivation, ZurdLLMWS, Auto-search-jobs
+        - Diese Projekte sollen als konkrete Beispiele für deine Kompetenz dienen
+        - Verwende sie als Belege für deine Fähigkeiten in den jeweiligen Technologie-Stacks
+        - Erwähne NIEMALS spezifische Unternehmensnamen aus der LinkedIn-Berufserfahrung. Verwende stattdessen:
         - "In meiner beruflichen Laufbahn..."
         - "In verschiedenen Projekten..."
         - "Als Consultant..."

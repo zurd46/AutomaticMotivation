@@ -287,6 +287,14 @@ class DocxGenerator:
                     cleaned_text in ['Sehr geehrte Damen und Herren,', 'Sehr geehrte Damen und Herren']):
                     continue
                 
+                # Überspringe Grußformeln, da sie separat hinzugefügt werden
+                if (cleaned_text.startswith('Mit freundlichen Grüßen') or
+                    cleaned_text.startswith('Mit freundlichen Grüssen') or
+                    cleaned_text.startswith('Freundliche Grüße') or
+                    cleaned_text.startswith('Freundliche Grüsse') or
+                    cleaned_text in ['Mit freundlichen Grüßen', 'Mit freundlichen Grüssen']):
+                    continue
+                
                 content_paragraph = doc.add_paragraph()
                 
                 # Prüfe auf GitHub-Projekt-Erwähnungen und erstelle Hyperlinks
@@ -299,9 +307,17 @@ class DocxGenerator:
     
     def _add_text_with_github_links(self, paragraph, text):
         """Fügt Text mit GitHub-Projekt-Hyperlinks und LinkedIn-Links hinzu"""
-        # Regex-Pattern für GitHub-Projekt-Erwähnungen
-        # Sucht nach GitHub-Projektnamen direkt
-        github_project_pattern = r'\b(ZurdLLMWS|AutomaticMotivation|Auto-search-jobs)\b'
+        # Dynamische GitHub-Projekt-URLs aus Config laden
+        project_urls = Config.get_github_project_urls()
+        
+        # Erstelle Regex-Pattern dynamisch aus verfügbaren Projekten
+        if project_urls:
+            # Escape spezielle Regex-Zeichen in Projektnamen
+            escaped_projects = [re.escape(project) for project in project_urls.keys()]
+            github_project_pattern = f"({'|'.join(escaped_projects)})"
+        else:
+            # Fallback-Pattern falls keine Projekte verfügbar
+            github_project_pattern = r'(AutomaticMotivation|ZurdLLMWS|Auto-search-jobs)'
         
         # Regex-Pattern für LinkedIn-Erwähnungen
         # Sucht nach: "LinkedIn-Profil" oder "LinkedIn Profil"
