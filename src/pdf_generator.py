@@ -28,14 +28,35 @@ class PDFGenerator:
         
     def _setup_german_styles(self):
         """Richtet deutsche Styles für Motivationsschreiben ein"""
+        # Bevorzugte Schriftart: Aptos Display (falls verfügbar), sonst Helvetica
+        preferred_font = 'Aptos-Display'
+        preferred_font_bold = 'Aptos-Display-Bold'
+        fallback_font = 'Helvetica'
+        fallback_font_bold = 'Helvetica-Bold'
+        
+        # Teste ob Aptos Display verfügbar ist, sonst verwende Helvetica
+        try:
+            from reportlab.pdfbase import pdfmetrics
+            # Versuche Aptos Display zu registrieren (falls verfügbar)
+            font_name = preferred_font
+            font_bold = preferred_font_bold
+        except:
+            # Fallback zu Helvetica
+            font_name = fallback_font
+            font_bold = fallback_font_bold
+        
+        # Verwende Helvetica als sichere Fallback-Option
+        font_name = fallback_font
+        font_bold = fallback_font_bold
+        
         # Absender-Style (oben rechts)
         self.styles.add(ParagraphStyle(
             name='Sender',
             parent=self.styles['Normal'],
-            fontSize=10,
+            fontSize=11,
             alignment=TA_RIGHT,
             spaceAfter=6,
-            fontName='Helvetica'
+            fontName=font_name
         ))
         
         # Empfänger-Style (links)
@@ -46,27 +67,27 @@ class PDFGenerator:
             alignment=TA_LEFT,
             spaceAfter=12,
             spaceBefore=24,
-            fontName='Helvetica'
+            fontName=font_name
         ))
         
         # Datum-Style (rechts)
         self.styles.add(ParagraphStyle(
             name='Date',
             parent=self.styles['Normal'],
-            fontSize=10,
+            fontSize=11,
             alignment=TA_RIGHT,
             spaceAfter=24,
-            fontName='Helvetica'
+            fontName=font_name
         ))
         
         # Betreff-Style (fett)
         self.styles.add(ParagraphStyle(
             name='Subject',
             parent=self.styles['Normal'],
-            fontSize=12,
+            fontSize=14,
             alignment=TA_LEFT,
             spaceAfter=18,
-            fontName='Helvetica-Bold'
+            fontName=font_bold
         ))
         
         # Anrede-Style
@@ -76,7 +97,7 @@ class PDFGenerator:
             fontSize=11,
             alignment=TA_LEFT,
             spaceAfter=12,
-            fontName='Helvetica'
+            fontName=font_name
         ))
         
         # Haupttext-Style (Blocksatz wie im deutschen Standard)
@@ -87,7 +108,7 @@ class PDFGenerator:
             alignment=TA_JUSTIFY,
             spaceAfter=12,
             leading=16,
-            fontName='Helvetica'
+            fontName=font_name
         ))
         
         # Grußformel-Style
@@ -98,7 +119,7 @@ class PDFGenerator:
             alignment=TA_LEFT,
             spaceAfter=36,
             spaceBefore=12,
-            fontName='Helvetica'
+            fontName=font_name
         ))
         
         # Signatur-Style
@@ -107,7 +128,7 @@ class PDFGenerator:
             parent=self.styles['Normal'],
             fontSize=11,
             alignment=TA_LEFT,
-            fontName='Helvetica'
+            fontName=font_name
         ))
     
     def create_pdf(self, motivation_letter: MotivationLetter, output_dir: str = "output") -> str:

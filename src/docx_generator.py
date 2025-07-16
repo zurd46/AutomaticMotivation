@@ -29,6 +29,20 @@ class DocxGenerator:
         self.output_dir = "output"
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
+        
+        # Konfiguriere bevorzugte Schriftart
+        self.font_name = 'Aptos Display'
+        self.font_fallback = 'Calibri'  # Fallback für ältere Word-Versionen
+    
+    def _set_font(self, run, size: int = 11, bold: bool = False):
+        """Setzt die Schriftart für einen Run"""
+        run.font.size = Pt(size)
+        run.font.bold = bold
+        try:
+            run.font.name = self.font_name
+        except:
+            # Fallback zu Calibri wenn Aptos Display nicht verfügbar
+            run.font.name = self.font_fallback
     
     def create_docx(self, motivation_letter: MotivationLetter) -> str:
         """
@@ -108,22 +122,37 @@ class DocxGenerator:
         sender_format.space_after = Pt(0)
         sender_format.line_spacing = 1.0
         
-        # Persönliche Daten
+        # Name
         sender_run = sender_paragraph.add_run(f"{motivation_letter.sender_name}\n")
-        sender_run.font.size = Pt(11)
-        sender_run.font.name = 'Arial'
+        self._set_font(sender_run, 11)
         
-        address_run = sender_paragraph.add_run(f"{motivation_letter.sender_address}\n")
-        address_run.font.size = Pt(11)
-        address_run.font.name = 'Arial'
+        # Adresse in separate Zeilen aufteilen
+        address_parts = motivation_letter.sender_address.split(', ')
         
+        if len(address_parts) >= 2:
+            # Straße und Hausnummer (erster Teil)
+            street = address_parts[0].strip()
+            address_run = sender_paragraph.add_run(f"{street}\n")
+            self._set_font(address_run, 11)
+            
+            # PLZ und Stadt (zweiter Teil)
+            city_part = address_parts[1].strip()
+            city_run = sender_paragraph.add_run(f"{city_part}\n")
+            self._set_font(city_run, 11)
+        else:
+            # Fallback: Komplette Adresse in einer Zeile
+            address_run = sender_paragraph.add_run(f"{motivation_letter.sender_address}\n")
+            self._set_font(address_run, 11)
+        
+        # Telefonnummer
         contact_run = sender_paragraph.add_run(f"{motivation_letter.sender_phone}\n")
         contact_run.font.size = Pt(11)
-        contact_run.font.name = 'Arial'
+        contact_run.font.name = 'Aptos Display'
         
+        # E-Mail
         email_run = sender_paragraph.add_run(f"{motivation_letter.sender_email}")
         email_run.font.size = Pt(11)
-        email_run.font.name = 'Arial'
+        email_run.font.name = 'Aptos Display'
     
     def _add_recipient_info(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Empfänger-Informationen hinzu"""
@@ -131,7 +160,7 @@ class DocxGenerator:
         company_paragraph = doc.add_paragraph()
         company_run = company_paragraph.add_run(f"{motivation_letter.recipient_company}")
         company_run.font.size = Pt(11)
-        company_run.font.name = 'Arial'
+        company_run.font.name = 'Aptos Display'
         company_run.bold = False  # Nicht fett
         company_run.underline = False  # Nicht unterstrichen
         
@@ -151,7 +180,7 @@ class DocxGenerator:
                     address_paragraph = doc.add_paragraph()
                     address_run = address_paragraph.add_run(part)
                     address_run.font.size = Pt(11)
-                    address_run.font.name = 'Arial'
+                    address_run.font.name = 'Aptos Display'
                     
                     # Zeilenabstand für Adresse reduzieren
                     address_format = address_paragraph.paragraph_format
@@ -170,14 +199,14 @@ class DocxGenerator:
         
         date_run = date_paragraph.add_run(f"{location}, {current_date}")
         date_run.font.size = Pt(11)
-        date_run.font.name = 'Arial'
+        date_run.font.name = 'Aptos Display'
     
     def _add_subject(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Betreff hinzu"""
         subject_paragraph = doc.add_paragraph()
         subject_run = subject_paragraph.add_run(f"{motivation_letter.subject}")
         subject_run.font.size = Pt(11)
-        subject_run.font.name = 'Arial'
+        subject_run.font.name = 'Aptos Display'
         subject_run.bold = True
     
     def _add_salutation(self, doc: Document, motivation_letter: MotivationLetter):
@@ -239,7 +268,7 @@ class DocxGenerator:
         
         salutation_run = salutation_paragraph.add_run(salutation)
         salutation_run.font.size = Pt(11)
-        salutation_run.font.name = 'Arial'
+        salutation_run.font.name = 'Aptos Display'
     
     def _add_main_content(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Hauptinhalt hinzu mit GitHub-Projekt-Hyperlinks"""
@@ -325,8 +354,7 @@ class DocxGenerator:
                 except ValueError:
                     # Fallback bei Parsing-Fehlern
                     run = paragraph.add_run(part)
-                    run.font.size = Pt(11)
-                    run.font.name = 'Arial'
+                    self._set_font(run, size=11, bold=False)
             elif part.startswith('LINKEDIN_LINK:'):
                 # Extract LinkedIn link info
                 try:
@@ -335,14 +363,12 @@ class DocxGenerator:
                 except ValueError:
                     # Fallback bei Parsing-Fehlern
                     run = paragraph.add_run(part)
-                    run.font.size = Pt(11)
-                    run.font.name = 'Arial'
+                    self._set_font(run, size=11, bold=False)
             else:
                 # Regular text
                 if part:
                     run = paragraph.add_run(part)
-                    run.font.size = Pt(11)
-                    run.font.name = 'Arial'
+                    self._set_font(run, size=11, bold=False)
     
     def _extract_github_projects_from_text(self, text):
         """Extrahiert GitHub-Projektnamen aus dem Text"""
@@ -369,8 +395,7 @@ class DocxGenerator:
             if not url or not url.startswith(('http://', 'https://')):
                 # Fallback: Normaler Text wenn URL ungültig
                 run = paragraph.add_run(text)
-                run.font.size = Pt(11)
-                run.font.name = 'Arial'
+                self._set_font(run, size=11, bold=False)
                 return
             
             # Neue Hyperlink-Relation erstellen
@@ -389,8 +414,8 @@ class DocxGenerator:
             
             # Font-Familie
             font_family = OxmlElement('w:rFonts')
-            font_family.set(qn('w:ascii'), 'Arial')
-            font_family.set(qn('w:hAnsi'), 'Arial')
+            font_family.set(qn('w:ascii'), 'Aptos Display')
+            font_family.set(qn('w:hAnsi'), 'Aptos Display')
             run_props.append(font_family)
             
             # Schriftgröße
@@ -424,10 +449,7 @@ class DocxGenerator:
             logger.error(f"Fehler bei Hyperlink-Erstellung für {text}: {e}")
             # Fallback: Normaler Text wenn Hyperlink fehlschlägt
             run = paragraph.add_run(text)
-            run.font.size = Pt(11)
-            run.font.name = 'Arial'
-            run.font.size = Pt(11)
-            run.font.name = 'Arial'
+            self._set_font(run, size=11, bold=False)
     
     def _add_closing(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Grußformel hinzu"""
@@ -438,17 +460,16 @@ class DocxGenerator:
         closing_paragraph = doc.add_paragraph()
         closing_run = closing_paragraph.add_run("Mit freundlichen Grüßen")
         closing_run.font.size = Pt(11)
-        closing_run.font.name = 'Arial'
+        closing_run.font.name = 'Aptos Display'
         
-        # Zwei Leerzeilen für Unterschrift (weniger Abstand)
-        doc.add_paragraph()
+        # Eine Leerzeile für Unterschrift (reduzierter Abstand)
         doc.add_paragraph()
         
         # Name für Unterschrift
         signature_paragraph = doc.add_paragraph()
         signature_run = signature_paragraph.add_run(f"{motivation_letter.sender_name}")
         signature_run.font.size = Pt(11)
-        signature_run.font.name = 'Arial'
+        signature_run.font.name = 'Aptos Display'
     
     def _extract_location_from_address(self, address: str) -> str:
         """Extrahiert den Ort aus der Adresse"""
