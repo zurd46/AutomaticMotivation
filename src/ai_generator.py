@@ -242,7 +242,7 @@ class AIGenerator:
         24. Betone KOMMUNIKATIONSFÄHIGKEITEN mit Beispielen (Präsentationen, Workshops, Schulungen)
         25. Zeige KUNDENORIENTIERUNG durch konkrete Kundenprojekte oder -feedback
         26. NUTZE LINKEDIN-ZERTIFIKATE als Qualifikationsnachweis (z.B. "Meine Zertifizierung als AWS Cloud Practitioner unterstreicht meine Kompetenz in...")
-        27. REFERENZIERE LINKEDIN-PROFIL als Verweis auf weitere Qualifikationen (z.B. "Weitere Details zu meiner Berufserfahrung finden Sie in meinem LinkedIn-Profil")
+        27. REFERENZIERE LINKEDIN-PROFIL als Verweis auf weitere Qualifikationen (z.B. "Weitere Details zu meiner Berufserfahrung finden Sie in meinem LinkedIn-Profil") - WICHTIG: Nur "LinkedIn-Profil" verlinken, NICHT die URL im Text anzeigen! KEINE spitzen Klammern <> verwenden!
         28. VERWENDE LINKEDIN-SKILLS passend zur Stellenausschreibung
         29. INTEGRIERE LINKEDIN-BERUFSERFAHRUNG in die Argumentation
         30. ERWÄHNE LINKEDIN-SPRACHEN falls relevant für die Position

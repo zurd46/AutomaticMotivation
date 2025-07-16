@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 def print_welcome():
     """Zeigt Willkommensnachricht mit Rich Panel"""
     welcome_text = Text()
-    welcome_text.append("🚀  AutoMoti\n", style="bold blue")
+    welcome_text.append("🚀  AutomaticMotivation\n", style="bold blue")
     welcome_text.append("Automatische Motivationsschreiben-Generierung", style="bold")
     
     console.print(Panel(
@@ -168,7 +168,7 @@ def show_model_selection():
     
     console.print(Panel(
         model_table,
-        title=f"[bold blue]🎛️ Modellauswahl (Aktuell: {config['model']})[/bold blue]",
+        title=f"[bold blue]🎛️  Modellauswahl (Aktuell: {config['model']})[/bold blue]",
         border_style="blue",
         padding=(1, 2)
     ))
