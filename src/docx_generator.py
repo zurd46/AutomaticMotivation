@@ -97,6 +97,11 @@ class DocxGenerator:
         sender_paragraph = doc.add_paragraph()
         sender_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         
+        # Kompakte Formatierung für Absender
+        sender_format = sender_paragraph.paragraph_format
+        sender_format.space_after = Pt(0)
+        sender_format.line_spacing = 1.0
+        
         # Persönliche Daten
         sender_run = sender_paragraph.add_run(f"{motivation_letter.sender_name}\n")
         sender_run.font.size = Pt(11)
@@ -124,6 +129,11 @@ class DocxGenerator:
         company_run.bold = False  # Nicht fett
         company_run.underline = False  # Nicht unterstrichen
         
+        # Zeilenabstand für Firmenname reduzieren
+        company_format = company_paragraph.paragraph_format
+        company_format.space_after = Pt(0)
+        company_format.line_spacing = 1.0
+        
         # Adresse in separaten Zeilen formatieren
         if motivation_letter.recipient_company_address and motivation_letter.recipient_company_address != "Nicht angegeben":
             # Adresse nach Kommas aufteilen und jede Zeile separat hinzufügen
@@ -136,6 +146,12 @@ class DocxGenerator:
                     address_run = address_paragraph.add_run(part)
                     address_run.font.size = Pt(11)
                     address_run.font.name = 'Arial'
+                    
+                    # Zeilenabstand für Adresse reduzieren
+                    address_format = address_paragraph.paragraph_format
+                    address_format.space_after = Pt(0)
+                    address_format.space_before = Pt(0)
+                    address_format.line_spacing = 1.0
     
     def _add_date_location(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Datum und Ort hinzu"""
