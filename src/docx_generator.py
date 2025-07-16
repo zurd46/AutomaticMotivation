@@ -124,12 +124,18 @@ class DocxGenerator:
         company_run.bold = False  # Nicht fett
         company_run.underline = False  # Nicht unterstrichen
         
-        # Adresse
+        # Adresse in separaten Zeilen formatieren
         if motivation_letter.recipient_company_address and motivation_letter.recipient_company_address != "Nicht angegeben":
-            address_paragraph = doc.add_paragraph()
-            address_run = address_paragraph.add_run(f"{motivation_letter.recipient_company_address}")
-            address_run.font.size = Pt(11)
-            address_run.font.name = 'Arial'
+            # Adresse nach Kommas aufteilen und jede Zeile separat hinzufügen
+            address_parts = motivation_letter.recipient_company_address.split(',')
+            
+            for part in address_parts:
+                part = part.strip()
+                if part:
+                    address_paragraph = doc.add_paragraph()
+                    address_run = address_paragraph.add_run(part)
+                    address_run.font.size = Pt(11)
+                    address_run.font.name = 'Arial'
     
     def _add_date_location(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Datum und Ort hinzu"""
@@ -251,8 +257,7 @@ class DocxGenerator:
         closing_run.font.size = Pt(11)
         closing_run.font.name = 'Arial'
         
-        # Leerzeilen für Unterschrift
-        doc.add_paragraph()
+        # Zwei Leerzeilen für Unterschrift (weniger Abstand)
         doc.add_paragraph()
         doc.add_paragraph()
         
@@ -297,8 +302,8 @@ class DocxGenerator:
             location = location.replace(" ", "_")
             location = re.sub(r'[^\w\-_\.]', '', location)
         
-        # Datum formatieren mit Zeitstempel für Eindeutigkeit
-        date_str = datetime.now().strftime("%d%m%y_%H%M%S")
+        # Datum formatieren OHNE Zeitstempel (nur Datum)
+        date_str = datetime.now().strftime("%d%m%y")
         
         # Dateiname zusammensetzen
         if location:
