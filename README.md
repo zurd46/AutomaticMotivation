@@ -70,14 +70,53 @@ python test_improved_ai.py
 AutomaticMotivation/
 ├── app.py                           # Hauptanwendung
 ├── requirements.txt                 # Abhängigkeiten
-├── config/config.py                 # Konfiguration
+├── .env                            # Konfigurationsdatei
+├── .env.example                    # Beispiel-Konfiguration
+├── .gitignore                      # Git-Ignore-Regeln
+├── .gitattributes                  # Git-Attribute
+├── README.md                       # Dokumentation
+├── config/
+│   ├── config.py                   # Konfigurationsverwaltung
+│   └── __pycache__/               # Python-Cache
 ├── src/
-│   ├── ai_generator.py              # KI-Generierung
-│   ├── github_project_extractor.py  # GitHub-Integration
-│   ├── job_extractor.py             # Stellenanalyse
-│   ├── pdf_generator.py             # PDF-Erstellung
-│   └── docx_generator.py            # DOCX-Erstellung
-└── output/                          # Generierte Dokumente
+│   ├── __init__.py                # Python-Paket-Initialisierung
+│   ├── ai_generator.py            # KI-Generierung
+│   ├── docx_generator.py          # DOCX-Erstellung
+│   ├── github_project_extractor.py # GitHub-Integration
+│   ├── job_extractor.py           # Stellenanalyse
+│   ├── llm_utils.py               # LLM-Hilfsfunktionen
+│   ├── models.py                  # Datenmodelle
+│   ├── pdf_generator.py           # PDF-Erstellung
+│   ├── template_pdf_generator.py  # Template-PDF-Erstellung
+│   └── __pycache__/               # Python-Cache
+├── templates/
+│   └── template.pdf               # PDF-Vorlage
+├── output/
+│   ├── .gitkeep                   # Git-Placeholder
+│   └── [Generierte Dokumente]     # PDF/DOCX-Ausgaben
+├── testing/
+│   ├── debug_html_extraction.py   # HTML-Extraktion debuggen
+│   ├── debug_llm_extraction.py    # LLM-Extraktion debuggen
+│   ├── debug_llm_parsing.py       # LLM-Parsing debuggen
+│   ├── run_all_tests.py           # Alle Tests ausführen
+│   └── test_datalynx_specific.py  # Spezifische Tests
+├── scripts/
+│   ├── analyze_template.py        # Template-Analyse
+│   ├── create_full_test.py        # Vollständige Tests erstellen
+│   ├── debug_extraction.py        # Extraktion debuggen
+│   ├── README.md                  # Script-Dokumentation
+│   ├── test_beei_docx.py          # DOCX-Tests
+│   ├── test_docx_fix.py           # DOCX-Korrekturen testen
+│   ├── test_docx_generation.py    # DOCX-Generierung testen
+│   ├── test_github_projects.py    # GitHub-Integration testen
+│   ├── test_improved_ai.py        # Verbesserte KI-Tests
+│   ├── test_motivation.py         # Motivationsschreiben testen
+│   ├── test_ultra_specific.py     # Spezifitäts-Tests
+│   └── update_personal_info.py    # Persönliche Infos aktualisieren
+└── docs/
+    ├── cleanup_summary.md         # Bereinigungsübersicht
+    ├── docx_feature_summary.md    # DOCX-Feature-Übersicht
+    └── testing_README.md          # Test-Dokumentation
 ```
 
 ## 🔍 Problemlösung
