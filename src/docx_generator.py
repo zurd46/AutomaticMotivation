@@ -205,7 +205,7 @@ class DocxGenerator:
         """Fügt Betreff hinzu"""
         subject_paragraph = doc.add_paragraph()
         subject_run = subject_paragraph.add_run(f"{motivation_letter.subject}")
-        subject_run.font.size = Pt(11)
+        subject_run.font.size = Pt(14)
         subject_run.font.name = 'Aptos Display'
         subject_run.bold = True
     
