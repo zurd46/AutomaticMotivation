@@ -4,14 +4,14 @@ KI-gestütztes System zur automatischen Generierung von personalisierten Motivat
 
 ## ✨ Features
 
-- 🎯 **GitHub-Integration** - Automatische Auswahl relevanter Projekte mit direkten Hyperlinks
-- � **LinkedIn-Integration** - Echte Profildaten-Extraktion und Verlinkung
-- �📊 **Konkrete Kennzahlen** - Realistische Erfolgskennzahlen basierend auf Projekttyp
-- 🤖 **Multi-LLM-Support** - OpenAI GPT-4, Claude 3.5 Haiku/Sonnet, Llama 2
-- 📄 **Dual-Format** - PDF und DOCX mit funktionierenden Hyperlinks
-- 🔍 **Stellenanalyse** - Automatische Extraktion von Jobanforderungen
-- 🎨 **Template-System** - PDF-Vorlagen für professionelles Layout
-- 💡 **Intelligente Verlinkung** - Automatische Hyperlinks für GitHub-Projekte und LinkedIn-Profil
+- **GitHub-Integration** - Automatische Auswahl relevanter Projekte mit direkten Hyperlinks
+- **LinkedIn-Integration** - Echte Profildaten-Extraktion und Verlinkung
+- **Konkrete Kennzahlen** - Realistische Erfolgskennzahlen basierend auf Projekttyp
+- **Multi-LLM-Support** - OpenAI GPT-4, Claude 3.5 Haiku/Sonnet, Llama 2
+- **Dual-Format** - PDF und DOCX mit funktionierenden Hyperlinks
+- **Stellenanalyse** - Automatische Extraktion von Jobanforderungen
+- **Template-System** - PDF-Vorlagen für professionelles Layout
+- **Intelligente Verlinkung** - Automatische Hyperlinks für GitHub-Projekte und LinkedIn-Profil
 
 ## 🔧 Installation
 
@@ -59,21 +59,21 @@ python app.py
 3. System analysiert Job, GitHub-Projekte und LinkedIn-Profil
 4. Generiert personalisierte Bewerbung (PDF + DOCX) mit funktionierenden Hyperlinks
 
-## 🔗 Hyperlink-Features
+## Hyperlink-Features
 
 - **GitHub-Projekte** werden automatisch verlinkt (z.B. "ZurdLLMWS" → GitHub-Repository)
 - **LinkedIn-Profil** wird verlinkt ohne URL-Anzeige im Text
 - **Funktioniert in PDF und DOCX** - Alle Links sind klickbar
 - **Automatische Erkennung** - Keine manuelle Formatierung erforderlich
 
-## � LinkedIn-Integration
+## LinkedIn-Integration
 
 - **Echte Datenextraktion** - Kein Mock-Content, echte Profildaten
 - **Automatische Verlinkung** - "LinkedIn-Profil" wird automatisch verlinkt
 - **Fallback-System** - Bei Extraktion-Fehlern werden Config-Daten verwendet
 - **Skills-Matching** - LinkedIn-Skills werden passend zur Stelle integriert
 
-## �🛠️ Tests
+## Tests
 
 ```bash
 # GitHub-Integration testen
