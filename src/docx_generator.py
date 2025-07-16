@@ -474,7 +474,7 @@ class DocxGenerator:
         
         # Grußformel
         closing_paragraph = doc.add_paragraph()
-        closing_run = closing_paragraph.add_run("Mit freundlichen Grüßen")
+        closing_run = closing_paragraph.add_run("Freundliche Grüsse")
         closing_run.font.size = Pt(11)
         closing_run.font.name = 'Aptos Display'
         

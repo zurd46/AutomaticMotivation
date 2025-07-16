@@ -303,7 +303,7 @@ class TemplateBasedPDFGenerator:
                 story.append(Spacer(1, 6))
             
             # 7. Grußformel
-            story.append(Paragraph("Mit freundlichen Grüßen", self.styles['Closing']))
+            story.append(Paragraph("Freundliche Grüsse", self.styles['Closing']))
             
             # 8. Signatur
             story.append(Paragraph(motivation_letter.sender_name, self.styles['Signature']))

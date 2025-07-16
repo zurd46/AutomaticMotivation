@@ -59,7 +59,7 @@ class GitHubProjectExtractor:
     
     def get_github_projects(self, github_url: str) -> List[GitHubProject]:
         """
-        Ruft alle öffentlichen Repositories von GitHub ab
+        Ruft alle öffentlichen Repositories von GitHub ab mit Caching
         
         Args:
             github_url: GitHub-Profil URL (z.B. https://github.com/username)
@@ -71,11 +71,133 @@ class GitHubProjectExtractor:
             # Extrahiere Username aus URL
             username = github_url.split('/')[-1]
             
+            # Nutze Config-Cache für Projekt-URLs
+            project_urls = Config.get_github_project_urls()
+            
+            # Wenn wir bereits URLs haben, verwende sie
+            if project_urls:
+                projects = []
+                for project_name, project_url in project_urls.items():
+                    # Hole zusätzliche Informationen nur für relevante Projekte
+                    project_info = self._get_basic_project_info(project_name, project_url)
+                    if project_info:
+                        projects.append(project_info)
+                
+                logger.info(f"Erfolgreich {len(projects)} Projekte aus Cache geladen")
+                return projects
+            
+            # Fallback: Direkte API-Abfrage (sollte selten verwendet werden)
+            return self._fetch_projects_from_api(username)
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen der GitHub-Projekte: {e}")
+            return []
+    
+    def _get_basic_project_info(self, project_name: str, project_url: str) -> Optional[GitHubProject]:
+        """Erstellt GitHubProject-Objekt mit grundlegenden Informationen"""
+        try:
+            # Bestimme Sprache basierend auf Projekt-Name/Pattern
+            language = self._guess_language(project_name)
+            
+            # Generiere Beschreibung basierend auf Projekt-Name
+            description = self._generate_description(project_name)
+            
+            # Generiere Topics basierend auf Projekt-Name
+            topics = self._generate_topics(project_name)
+            
+            return GitHubProject(
+                name=project_name,
+                description=description,
+                url=project_url,
+                language=language,
+                topics=topics,
+                stars=0,  # Für Caching setzen wir das auf 0
+                is_fork=False
+            )
+            
+        except Exception as e:
+            logger.error(f"Fehler bei der Erstellung von Projekt-Info für {project_name}: {e}")
+            return None
+    
+    def _guess_language(self, project_name: str) -> str:
+        """Bestimmt die Programmiersprache basierend auf Projekt-Name"""
+        name_lower = project_name.lower()
+        
+        if any(keyword in name_lower for keyword in ['python', 'py', 'django', 'flask']):
+            return 'Python'
+        elif any(keyword in name_lower for keyword in ['js', 'javascript', 'node', 'react', 'vue']):
+            return 'JavaScript'
+        elif any(keyword in name_lower for keyword in ['java', 'spring']):
+            return 'Java'
+        elif any(keyword in name_lower for keyword in ['cpp', 'c++', 'cmake']):
+            return 'C++'
+        elif any(keyword in name_lower for keyword in ['go', 'golang']):
+            return 'Go'
+        else:
+            return 'Python'  # Standard-Fallback
+    
+    def _generate_description(self, project_name: str) -> str:
+        """Generiert eine Beschreibung basierend auf Projekt-Name"""
+        name_lower = project_name.lower()
+        
+        if 'automatic' in name_lower and 'motivation' in name_lower:
+            return 'KI-basiertes System zur automatischen Generierung von Motivationsschreiben'
+        elif 'llm' in name_lower and 'ws' in name_lower:
+            return 'Webscraping-System mit LLM-Integration für automatisierte Datenextraktion'
+        elif 'auto' in name_lower and 'search' in name_lower and 'job' in name_lower:
+            return 'Automatisierte Jobsuche mit Machine Learning-Algorithmen'
+        elif 'scraper' in name_lower or 'scraping' in name_lower:
+            return 'Automatisierte Datenextraktion und Webscraping-Tool'
+        elif 'bot' in name_lower:
+            return 'Automatisierter Bot für verschiedene Aufgaben'
+        elif 'api' in name_lower:
+            return 'RESTful API-Implementierung mit modernen Technologien'
+        else:
+            return f'{project_name} - Softwareentwicklungsprojekt'
+    
+    def _generate_topics(self, project_name: str) -> List[str]:
+        """Generiert Topics basierend auf Projekt-Name"""
+        name_lower = project_name.lower()
+        topics = []
+        
+        if 'python' in name_lower or self._guess_language(project_name) == 'Python':
+            topics.extend(['python', 'automation'])
+        
+        if 'ai' in name_lower or 'llm' in name_lower:
+            topics.extend(['artificial-intelligence', 'machine-learning'])
+        
+        if 'web' in name_lower or 'scraping' in name_lower:
+            topics.extend(['web-scraping', 'data-extraction'])
+        
+        if 'auto' in name_lower:
+            topics.append('automation')
+        
+        if 'job' in name_lower:
+            topics.append('job-search')
+        
+        if 'api' in name_lower:
+            topics.append('api')
+        
+        return topics
+    
+    def _fetch_projects_from_api(self, username: str) -> List[GitHubProject]:
+        """Fallback: Direkte API-Abfrage (mit Rate-Limiting-Schutz)"""
+        try:
             # GitHub API-URL
             api_url = f"https://api.github.com/users/{username}/repos"
             
+            # Headers für bessere Rate-Limiting-Behandlung
+            headers = {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'AutomaticMotivation/1.0'
+            }
+            
+            # Token falls verfügbar
+            if Config.GITHUB_API_TOKEN:
+                headers['Authorization'] = f'token {Config.GITHUB_API_TOKEN}'
+            
             # API-Aufruf
-            response = requests.get(api_url)
+            response = requests.get(api_url, headers=headers, timeout=10)
             response.raise_for_status()
             
             repos = response.json()
@@ -101,7 +223,7 @@ class GitHubProjectExtractor:
             # Sortiere nach Sternen (beliebteste zuerst)
             projects.sort(key=lambda x: x.stars, reverse=True)
             
-            logger.info(f"Erfolgreich {len(projects)} Projekte von GitHub abgerufen")
+            logger.info(f"Erfolgreich {len(projects)} Projekte von GitHub-API abgerufen")
             return projects
             
         except requests.RequestException as e:

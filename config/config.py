@@ -1,4 +1,7 @@
 import os
+import time
+import json
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,6 +29,11 @@ class Config:
     PERSONAL_LINKEDIN = os.getenv('PERSONAL_LINKEDIN', 'https://linkedin.com/in/username')
     PERSONAL_EXPERIENCE = os.getenv('PERSONAL_EXPERIENCE', '3 Jahre Berufserfahrung')
     PERSONAL_SKILLS = os.getenv('PERSONAL_SKILLS', 'Python, JavaScript, Projektmanagement')
+    
+    # GitHub API Konfiguration
+    GITHUB_API_TOKEN = os.getenv('GITHUB_API_TOKEN')
+    GITHUB_CACHE_DURATION = 3600  # 1 Stunde in Sekunden
+    GITHUB_CACHE_FILE = Path(__file__).parent / 'github_cache.json'
     
     # App Settings
     USE_OPENROUTER = bool(OPENROUTER_API_KEY)
@@ -72,16 +80,32 @@ class Config:
     
     @classmethod
     def get_github_project_urls(cls):
-        """Gibt GitHub-Projekt-URLs zurück, dynamisch von der GitHub-API geladen"""
+        """Gibt GitHub-Projekt-URLs zurück, dynamisch von der GitHub-API geladen mit Caching"""
         username = cls.get_github_username()
         if not username:
             return {}
+        
+        # Prüfe Cache
+        cached_data = cls._load_github_cache()
+        if cached_data and cls._is_cache_valid(cached_data):
+            return cached_data['project_urls']
         
         # Lade Projekte dynamisch von GitHub-API
         try:
             import requests
             api_url = f'https://api.github.com/users/{username}/repos'
-            response = requests.get(api_url, timeout=10)
+            
+            # Headers für GitHub API
+            headers = {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'AutomaticMotivation/1.0'
+            }
+            
+            # Füge Token hinzu falls verfügbar
+            if cls.GITHUB_API_TOKEN:
+                headers['Authorization'] = f'token {cls.GITHUB_API_TOKEN}'
+            
+            response = requests.get(api_url, headers=headers, timeout=10)
             
             if response.status_code == 200:
                 repos = response.json()
@@ -93,6 +117,9 @@ class Config:
                         project_url = repo['html_url']
                         project_urls[project_name] = project_url
                 
+                # Cache speichern
+                cls._save_github_cache(project_urls)
+                
                 return project_urls
             else:
                 print(f"GitHub API Fehler: {response.status_code}")
@@ -101,6 +128,44 @@ class Config:
         except Exception as e:
             print(f"Fehler beim Laden der GitHub-Projekte: {e}")
             return cls._get_fallback_projects(username)
+    
+    @classmethod
+    def _load_github_cache(cls):
+        """Lädt GitHub-Cache aus Datei"""
+        try:
+            if cls.GITHUB_CACHE_FILE.exists():
+                with open(cls.GITHUB_CACHE_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"Fehler beim Laden des GitHub-Cache: {e}")
+        return None
+    
+    @classmethod
+    def _is_cache_valid(cls, cached_data):
+        """Prüft ob Cache noch gültig ist"""
+        if not cached_data or 'timestamp' not in cached_data:
+            return False
+        
+        age = time.time() - cached_data['timestamp']
+        return age < cls.GITHUB_CACHE_DURATION
+    
+    @classmethod
+    def _save_github_cache(cls, project_urls):
+        """Speichert GitHub-Cache in Datei"""
+        try:
+            cache_data = {
+                'timestamp': time.time(),
+                'project_urls': project_urls
+            }
+            
+            # Stelle sicher, dass das Verzeichnis existiert
+            cls.GITHUB_CACHE_FILE.parent.mkdir(exist_ok=True)
+            
+            with open(cls.GITHUB_CACHE_FILE, 'w', encoding='utf-8') as f:
+                json.dump(cache_data, f, indent=2, ensure_ascii=False)
+                
+        except Exception as e:
+            print(f"Fehler beim Speichern des GitHub-Cache: {e}")
     
     @classmethod
     def _get_fallback_projects(cls, username):

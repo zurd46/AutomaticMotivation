@@ -225,32 +225,33 @@ class AIGenerator:
         9. WICHTIG: Schreibe KEINE Grußformel (wie "Mit freundlichen Grüßen") oder Signatur am Ende
         10. WICHTIG: Schreibe KEINEN Namen am Ende des Textes
         11. WICHTIG: Beginne das Schreiben mit der angegebenen Anrede "{salutation}"
+        12. WICHTIG: Verwende EXAKT diesen Schlusssatz als letzten Absatz: "Ich freue mich darauf, Sie in einem persönlichen Gespräch von meiner Motivation und Eignung zu überzeugen und dabei gezielt auf relevante Projekte sowie Ihre Fragen einzugehen."
         
         SPEZIFISCHE VERBESSERUNGEN - VERWENDE DIE GITHUB-PROJEKTE UND LINKEDIN-INFORMATIONEN:
-        12. Erwähne KONKRETE PROJEKTE aus der Liste oben mit spezifischen Technologien und messbaren Erfolgen
-        13. Nenne KONKRETE ERFOLGE mit Kennzahlen (z.B. "Reduzierung der Prozesszeit um 40%", "Steigerung der Effizienz um 30%", "Verbesserung der Genauigkeit um 25%")
-        14. Betone TEAMARBEIT und BERATUNGSERFAHRUNG mit konkreten Beispielen (z.B. "In interdisziplinären Teams von 5 Entwicklern leitete ich...", "Durch enge Zusammenarbeit mit 3 Stakeholdern...", "Als Berater unterstützte ich 10+ Kunden bei...")
-        15. Erwähne BRANCHEN-SPEZIFISCHE Kenntnisse falls relevant (z.B. Fintech, Healthcare, E-Commerce, Manufacturing, Consulting)
-        16. Verwende AKTIVE VERBEN und KONKRETE BEISPIELE statt allgemeiner Aussagen
-        17. Zeige PROBLEM-LÖSUNG-ERFOLG Struktur in Beispielen (z.B. "Die Herausforderung X löste ich durch die Implementierung von Y, was zu einer Verbesserung von Z um 30% führte")
-        18. Betone CONSULTANT-SPEZIFISCHE Fähigkeiten: Kundenberatung, Projektmanagement, Stakeholder-Management, Präsentationsfähigkeiten, Change Management
-        19. Nutze die GitHub-Projekte als Belege für deine Kompetenz mit spezifischen Technologie-Stacks
-        20. Erwähne spezifische Technologien und Frameworks aus den Projekten, die zur Stelle passen
-        21. Zeige LEADERSHIP und INITIATIVE durch konkrete Beispiele
-        22. Demonstriere PROBLEM-SOLVING Fähigkeiten mit spezifischen Szenarien
-        23. Erwähne AGILE/SCRUM Erfahrung falls relevant
-        24. Betone KOMMUNIKATIONSFÄHIGKEITEN mit Beispielen (Präsentationen, Workshops, Schulungen)
-        25. Zeige KUNDENORIENTIERUNG durch konkrete Kundenprojekte oder -feedback
-        26. NUTZE LINKEDIN-ZERTIFIKATE als Qualifikationsnachweis (z.B. "Meine Zertifizierung als AWS Cloud Practitioner unterstreicht meine Kompetenz in...")
-        27. REFERENZIERE LINKEDIN-PROFIL als Verweis auf weitere Qualifikationen (z.B. "Weitere Details zu meiner Berufserfahrung finden Sie in meinem LinkedIn-Profil") - WICHTIG: Nur "LinkedIn-Profil" verlinken, NICHT die URL im Text anzeigen! KEINE spitzen Klammern <> verwenden!
-        28. VERWENDE LINKEDIN-SKILLS passend zur Stellenausschreibung
-        29. INTEGRIERE LINKEDIN-BERUFSERFAHRUNG in die Argumentation
-        30. ERWÄHNE LINKEDIN-SPRACHEN falls relevant für die Position
+        13. Erwähne KONKRETE PROJEKTE aus der Liste oben mit spezifischen Technologien und messbaren Erfolgen
+        14. Nenne KONKRETE ERFOLGE mit Kennzahlen (z.B. "Reduzierung der Prozesszeit um 40%", "Steigerung der Effizienz um 30%", "Verbesserung der Genauigkeit um 25%")
+        15. Betone TEAMARBEIT und BERATUNGSERFAHRUNG mit konkreten Beispielen (z.B. "In interdisziplinären Teams von 5 Entwicklern leitete ich...", "Durch enge Zusammenarbeit mit 3 Stakeholdern...", "Als Berater unterstützte ich 10+ Kunden bei...")
+        16. Erwähne BRANCHEN-SPEZIFISCHE Kenntnisse falls relevant (z.B. Fintech, Healthcare, E-Commerce, Manufacturing, Consulting)
+        17. Verwende AKTIVE VERBEN und KONKRETE BEISPIELE statt allgemeiner Aussagen
+        18. Zeige PROBLEM-LÖSUNG-ERFOLG Struktur in Beispielen (z.B. "Die Herausforderung X löste ich durch die Implementierung von Y, was zu einer Verbesserung von Z um 30% führte")
+        19. Betone CONSULTANT-SPEZIFISCHE Fähigkeiten: Kundenberatung, Projektmanagement, Stakeholder-Management, Präsentationsfähigkeiten, Change Management
+        20. Nutze die GitHub-Projekte als Belege für deine Kompetenz mit spezifischen Technologie-Stacks
+        21. Erwähne spezifische Technologien und Frameworks aus den Projekten, die zur Stelle passen
+        22. Zeige LEADERSHIP und INITIATIVE durch konkrete Beispiele
+        23. Demonstriere PROBLEM-SOLVING Fähigkeiten mit spezifischen Szenarien
+        24. Erwähne AGILE/SCRUM Erfahrung falls relevant
+        25. Betone KOMMUNIKATIONSFÄHIGKEITEN mit Beispielen (Präsentationen, Workshops, Schulungen)
+        26. Zeige KUNDENORIENTIERUNG durch konkrete Kundenprojekte oder -feedback
+        27. NUTZE LINKEDIN-ZERTIFIKATE als Qualifikationsnachweis (z.B. "Meine Zertifizierung als AWS Cloud Practitioner unterstreicht meine Kompetenz in...")
+        28. REFERENZIERE LINKEDIN-PROFIL als Verweis auf weitere Qualifikationen (z.B. "Weitere Details zu meiner Berufserfahrung finden Sie in meinem LinkedIn-Profil") - WICHTIG: Nur "LinkedIn-Profil" verlinken, NICHT die URL im Text anzeigen! KEINE spitzen Klammern <> verwenden!
+        29. VERWENDE LINKEDIN-SKILLS passend zur Stellenausschreibung
+        30. INTEGRIERE LINKEDIN-BERUFSERFAHRUNG in die Argumentation
+        31. ERWÄHNE LINKEDIN-SPRACHEN falls relevant für die Position
 
         BEISPIEL-INTEGRATION VON GITHUB-PROJEKTEN MIT KONKRETEN ERFOLGEN:
-        - "In meinem Projekt 'AutomaticMotivation' entwickelte ich mit Python und OpenAI eine KI-basierte Lösung zur Automatisierung von Bewerbungsprozessen, die die Bearbeitungszeit um 60% reduzierte und die Erfolgsquote um 35% steigerte"
-        - "Durch die Entwicklung von 'ZurdLLMWS' mit Python und LangChain konnte ich ein automatisiertes Webscraping-System erstellen, das die Datenerfassung um 80% beschleunigte und bei der Prozessoptimierung unterstützte"
-        - "In einem interdisziplinären Team leitete ich das Projekt 'Auto-search-jobs', welches durch Machine Learning-Algorithmen die Jobsuche automatisierte und viele Nutzer dabei unterstützte, passende Stellenangebote zu finden"
+        - "In meinem Projekt AutomaticMotivation entwickelte ich mit Python und OpenAI eine KI-basierte Lösung zur Automatisierung von Bewerbungsprozessen, die die Bearbeitungszeit um 60% reduzierte und die Erfolgsquote um 35% steigerte"
+        - "Durch die Entwicklung von ZurdLLMWS mit Python und LangChain konnte ich ein automatisiertes Webscraping-System erstellen, das die Datenerfassung um 80% beschleunigte und bei der Prozessoptimierung unterstützte"
+        - "In einem interdisziplinären Team leitete ich das Projekt Auto-search-jobs, welches durch Machine Learning-Algorithmen die Jobsuche automatisierte und viele Nutzer dabei unterstützte, passende Stellenangebote zu finden"
         - "Als technischer Berater begleitete ich verschiedene Kunden bei der Implementierung von KI-Lösungen, wobei ich durch Workshop-Formate und Präsentationen komplexe technische Konzepte verständlich vermittelte"
         - "Die Herausforderung der manuellen Datenverarbeitung löste ich durch die Implementierung eines Python-basierten Automatisierungssystems, was zu einer Kostenreduktion von 25% und einer Fehlerreduktion um 90% führte"
         
@@ -258,6 +259,8 @@ class AIGenerator:
         - Erwähne UNBEDINGT mindestens 2-3 der folgenden Hauptprojekte in deinem Schreiben: AutomaticMotivation, ZurdLLMWS, Auto-search-jobs
         - Diese Projekte sollen als konkrete Beispiele für deine Kompetenz dienen
         - Verwende sie als Belege für deine Fähigkeiten in den jeweiligen Technologie-Stacks
+        - WICHTIG: Verwende KEINE Anführungszeichen oder andere Sonderzeichen vor oder nach den GitHub-Projektnamen
+        - Schreibe die Projektnamen direkt ohne Anführungszeichen: AutomaticMotivation, ZurdLLMWS, Auto-search-jobs
         - Erwähne NIEMALS spezifische Unternehmensnamen aus der LinkedIn-Berufserfahrung. Verwende stattdessen:
         - "In meiner beruflichen Laufbahn..."
         - "In verschiedenen Projekten..."
