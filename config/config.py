@@ -23,6 +23,7 @@ class Config:
     PERSONAL_PHONE = os.getenv('PERSONAL_PHONE', '+49 123 456789')
     PERSONAL_EMAIL = os.getenv('PERSONAL_EMAIL', 'max.mustermann@email.com')
     PERSONAL_GITHUB = os.getenv('PERSONAL_GITHUB', 'https://github.com/username')
+    PERSONAL_LINKEDIN = os.getenv('PERSONAL_LINKEDIN', 'https://linkedin.com/in/username')
     PERSONAL_EXPERIENCE = os.getenv('PERSONAL_EXPERIENCE', '3 Jahre Berufserfahrung')
     PERSONAL_SKILLS = os.getenv('PERSONAL_SKILLS', 'Python, JavaScript, Projektmanagement')
     
@@ -56,6 +57,30 @@ class Config:
             'phone': cls.PERSONAL_PHONE,
             'email': cls.PERSONAL_EMAIL,
             'github': cls.PERSONAL_GITHUB,
+            'linkedin': cls.PERSONAL_LINKEDIN,
             'experience': cls.PERSONAL_EXPERIENCE,
             'skills': cls.PERSONAL_SKILLS
+        }
+    
+    @classmethod
+    def get_github_username(cls):
+        """Extrahiert den GitHub-Username aus der PERSONAL_GITHUB URL"""
+        if cls.PERSONAL_GITHUB:
+            # Extrahiere Username aus URL: https://github.com/username -> username
+            return cls.PERSONAL_GITHUB.split('/')[-1]
+        return None
+    
+    @classmethod
+    def get_github_project_urls(cls):
+        """Gibt bekannte GitHub-Projekt-URLs zurück"""
+        username = cls.get_github_username()
+        if not username:
+            return {}
+        
+        # Bekannte Projekte - könnte später aus API geladen werden
+        known_projects = ['AutomaticMotivation', 'ZurdLLMWS', 'Auto-search-jobs']
+        
+        return {
+            project: f'https://github.com/{username}/{project}'
+            for project in known_projects
         }

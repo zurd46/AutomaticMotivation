@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 def print_welcome():
     """Zeigt Willkommensnachricht mit Rich Panel"""
     welcome_text = Text()
-    welcome_text.append("🚀 AutoMoti\n", style="bold blue")
+    welcome_text.append("🚀  AutoMoti\n", style="bold blue")
     welcome_text.append("Automatische Motivationsschreiben-Generierung", style="bold")
     
     console.print(Panel(
@@ -71,7 +71,7 @@ def print_llm_info():
 def get_user_input():
     """Holt Benutzereingaben mit Rich Interface"""
     console.print(Panel(
-        "📋 Bitte geben Sie die folgenden Informationen ein:",
+        "📋  Bitte geben Sie die folgenden Informationen ein:",
         title="[bold green]Eingabe erforderlich[/bold green]",
         border_style="green"
     ))
@@ -101,18 +101,20 @@ def get_user_input():
     info_table.add_row("Adresse", personal_info['address'])
     info_table.add_row("Telefon", personal_info['phone'])
     info_table.add_row("E-Mail", personal_info['email'])
+    info_table.add_row("GitHub", personal_info['github'])
+    info_table.add_row("LinkedIn", personal_info['linkedin'])
     info_table.add_row("Erfahrung", personal_info['experience'])
     info_table.add_row("Fähigkeiten", personal_info['skills'])
     
     console.print(Panel(
         info_table,
-        title="[bold blue]👤 Persönliche Informationen (aus .env geladen)[/bold blue]",
+        title="[bold blue]👤  Persönliche Informationen (aus .env geladen)[/bold blue]",
         border_style="blue",
         padding=(1, 2)
     ))
     
     # Möglichkeit zum Überschreiben
-    modify = Confirm.ask("✏️ Möchten Sie diese Informationen ändern?", default=False)
+    modify = Confirm.ask("✏️  Möchten Sie diese Informationen ändern?", default=False)
     
     if modify:
         console.print(Panel(
@@ -201,21 +203,21 @@ def main():
         job_url, personal_info = get_user_input()
         
         # Verarbeitung starten
-        console.print(Rule("[bold green]🔄 Verarbeitung startet[/bold green]"))
+        console.print(Rule("[bold green]🔄  Verarbeitung startet[/bold green]"))
         
         # 1. Job-Informationen extrahieren
-        with console.status("[bold blue]1️⃣ Extrahiere Job-Informationen...[/bold blue]"):
+        with console.status("[bold blue]1️⃣  Extrahiere Job-Informationen...[/bold blue]"):
             job_extractor = JobExtractor()
             job_description = job_extractor.extract_from_url(job_url)
         
         console.print(Panel(
-            f"✅ [green]Job extrahiert:[/green] {job_description.company} - {job_description.position}",
-            title="[bold green]✅ Job-Extraktion erfolgreich[/bold green]",
+            f"✅  [green]Job extrahiert:[/green] {job_description.company} - {job_description.position}",
+            title="[bold green]✅  Job-Extraktion erfolgreich[/bold green]",
             border_style="green"
         ))
         
         # 2. Motivationsschreiben generieren
-        with console.status("[bold blue]2️⃣ Generiere Motivationsschreiben...[/bold blue]"):
+        with console.status("[bold blue]2️⃣  Generiere Motivationsschreiben...[/bold blue]"):
             ai_generator = AIGenerator()
             
             # Spezifisches Modell verwenden, falls ausgewählt
@@ -226,13 +228,13 @@ def main():
         
         model_info = f" mit {model} ({provider})" if provider and model else ""
         console.print(Panel(
-            f"✅ [green]Motivationsschreiben generiert{model_info}[/green]",
-            title="[bold green]✅ AI-Generierung erfolgreich[/bold green]",
+            f"✅  [green]Motivationsschreiben generiert{model_info}[/green]",
+            title="[bold green]✅  AI-Generierung erfolgreich[/bold green]",
             border_style="green"
         ))
         
         # 3. PDF & DOCX erstellen
-        with console.status("[bold blue]3️⃣ Erstelle PDF und DOCX...[/bold blue]"):
+        with console.status("[bold blue]3️⃣  Erstelle PDF und DOCX...[/bold blue]"):
             # Template-basierte PDF-Erstellung verwenden
             pdf_generator = TemplateBasedPDFGenerator("templates/template.pdf")
             
@@ -246,20 +248,20 @@ def main():
             docx_path = docx_generator.create_docx(motivation_letter)
         
         pdf_info = Text()
-        pdf_info.append("✅ PDF erstellt: ", style="green")
+        pdf_info.append("✅  PDF erstellt: ", style="green")
         pdf_info.append(pdf_path, style="bold blue")
-        pdf_info.append("\n✅ DOCX erstellt: ", style="green")
+        pdf_info.append("\n✅  DOCX erstellt: ", style="green")
         pdf_info.append(docx_path, style="bold blue")
         
         if template_info["template_found"]:
-            pdf_info.append(f"\n📄 Template: {template_info['pages']} Seiten", style="dim")
-            pdf_info.append(f"\n🎨 Layout: Template-basiert", style="dim")
+            pdf_info.append(f"\n📄  Template: {template_info['pages']} Seiten", style="dim")
+            pdf_info.append(f"\n🎨  Layout: Template-basiert", style="dim")
         else:
-            pdf_info.append(f"\n📄 Layout: Standard", style="dim")
+            pdf_info.append(f"\n📄  Layout: Standard", style="dim")
         
         console.print(Panel(
             pdf_info,
-            title="[bold green]✅ PDF & DOCX-Erstellung erfolgreich[/bold green]",
+            title="[bold green]✅  PDF & DOCX-Erstellung erfolgreich[/bold green]",
             border_style="green"
         ))
         
@@ -271,11 +273,11 @@ def main():
         summary_table.add_column("Detail", style="cyan")
         summary_table.add_column("Wert", style="white")
         
-        summary_table.add_row("📄 PDF-Datei", pdf_path)
-        summary_table.add_row("📄 DOCX-Datei", docx_path)
-        summary_table.add_row("🏢 Unternehmen", job_description.company)
-        summary_table.add_row("💼 Position", job_description.position)
-        summary_table.add_row("👤 Bewerber", personal_info['name'])
+        summary_table.add_row("📄  PDF-Datei", pdf_path)
+        summary_table.add_row("📄  DOCX-Datei", docx_path)
+        summary_table.add_row("🏢  Unternehmen", job_description.company)
+        summary_table.add_row("💼  Position", job_description.position)
+        summary_table.add_row("👤  Bewerber", personal_info['name'])
         
         # Kosten anzeigen (wenn verfügbar)
         if provider and model:
@@ -285,7 +287,7 @@ def main():
         
         console.print(Panel(
             summary_table,
-            title="[bold green]📊 Zusammenfassung[/bold green]",
+            title="[bold green]📊  Zusammenfassung[/bold green]",
             border_style="green",
             padding=(1, 2)
         ))

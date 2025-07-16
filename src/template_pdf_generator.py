@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -15,6 +16,7 @@ import pdfplumber
 import PyPDF2
 import logging
 from src.models import MotivationLetter
+from config.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -295,7 +297,9 @@ class TemplateBasedPDFGenerator:
             # 5. Haupttext (in Absätze aufgeteilt) - Anrede ist bereits im Content enthalten
             content_paragraphs = self._format_content_paragraphs(motivation_letter.content)
             for paragraph in content_paragraphs:
-                story.append(Paragraph(paragraph, self.styles['MainText']))
+                # Füge GitHub-Projekt-Hyperlinks hinzu
+                paragraph_with_links = self._add_github_links_to_paragraph(paragraph)
+                story.append(Paragraph(paragraph_with_links, self.styles['MainText']))
                 story.append(Spacer(1, 6))
             
             # 7. Grußformel
@@ -399,6 +403,51 @@ class TemplateBasedPDFGenerator:
         else:
             logger.info("Verwende Standard-PDF-Erstellung")
             return self.create_standard_pdf(motivation_letter, output_dir)
+    
+    def _add_github_links_to_paragraph(self, paragraph_text):
+        """Fügt GitHub-Projekt-Hyperlinks und LinkedIn-Links zu einem Absatz hinzu"""
+        # Regex-Pattern für GitHub-Projekt-Erwähnungen
+        # Sucht nach GitHub-Projektnamen direkt
+        github_project_pattern = r'\b(ZurdLLMWS|AutomaticMotivation|Auto-search-jobs)\b'
+        
+        # Regex-Pattern für LinkedIn-Erwähnungen
+        # Sucht nach: "LinkedIn-Profil" oder "LinkedIn Profil"
+        linkedin_pattern = r"(LinkedIn[\s\-]?Profil)"
+        
+        # Verwende Config für dynamische URL-Generierung
+        project_urls = Config.get_github_project_urls()
+        linkedin_url = Config.PERSONAL_LINKEDIN
+        
+        def replace_project_with_link(match):
+            project_name = match.group(1)    # "ProjectName"
+            
+            # GitHub-URL für das Projekt suchen
+            github_url = project_urls.get(project_name)
+            
+            if github_url:
+                # Erstelle Hyperlink im ReportLab-Format
+                return f'<a href="{github_url}" color="blue">{project_name}</a>'
+            else:
+                # Kein Link verfügbar, verwende normalen Text
+                return project_name
+        
+        def replace_linkedin_with_link(match):
+            linkedin_text = match.group(1)
+            
+            if linkedin_url:
+                # Erstelle LinkedIn-Hyperlink im ReportLab-Format
+                return f'<a href="{linkedin_url}" color="blue">{linkedin_text}</a>'
+            else:
+                # Kein Link verfügbar, verwende normalen Text
+                return linkedin_text
+        
+        # Ersetze alle Projekt-Erwähnungen durch Links
+        processed_text = re.sub(github_project_pattern, replace_project_with_link, paragraph_text)
+        
+        # Ersetze LinkedIn-Erwähnungen durch Links
+        processed_text = re.sub(linkedin_pattern, replace_linkedin_with_link, processed_text)
+        
+        return processed_text
     
     def create_standard_pdf(self, motivation_letter: MotivationLetter, 
                           output_dir: str = "output") -> str:

@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -11,6 +12,7 @@ from reportlab.lib.colors import black
 import pdfplumber
 import logging
 from src.models import MotivationLetter
+from config.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +234,9 @@ class PDFGenerator:
             # 5. Haupttext (in Absätze aufgeteilt) - Anrede ist bereits im Content enthalten
             content_paragraphs = self._format_content_paragraphs(motivation_letter.content)
             for paragraph in content_paragraphs:
-                story.append(Paragraph(paragraph, self.styles['MainText']))
+                # Prüfe auf GitHub-Projekt-Erwähnungen und erstelle Hyperlinks
+                formatted_paragraph = self._add_github_links_to_paragraph(paragraph)
+                story.append(Paragraph(formatted_paragraph, self.styles['MainText']))
                 story.append(Spacer(1, 6))
             
             # 6. Grußformel
@@ -481,3 +485,48 @@ class PDFGenerator:
         except Exception as e:
             logger.error(f"Fehler bei Template-Analyse: {e}")
             raise
+    
+    def _add_github_links_to_paragraph(self, paragraph_text):
+        """Fügt GitHub-Projekt-Hyperlinks und LinkedIn-Links zu einem Absatz hinzu"""
+        # Regex-Pattern für GitHub-Projekt-Erwähnungen
+        # Sucht nach GitHub-Projektnamen direkt
+        github_project_pattern = r'\b(ZurdLLMWS|AutomaticMotivation|Auto-search-jobs)\b'
+        
+        # Regex-Pattern für LinkedIn-Erwähnungen
+        # Sucht nach: "LinkedIn-Profil" oder "LinkedIn Profil"
+        linkedin_pattern = r"(LinkedIn[\s\-]?Profil)"
+        
+        # Verwende Config für dynamische URL-Generierung
+        project_urls = Config.get_github_project_urls()
+        linkedin_url = Config.PERSONAL_LINKEDIN
+        
+        def replace_project_with_link(match):
+            project_name = match.group(1)    # "ProjectName"
+            
+            # GitHub-URL für das Projekt suchen
+            github_url = project_urls.get(project_name)
+            
+            if github_url:
+                # Erstelle Hyperlink im ReportLab-Format
+                return f'<a href="{github_url}" color="blue">{project_name}</a>'
+            else:
+                # Kein Link verfügbar, verwende normalen Text
+                return project_name
+        
+        def replace_linkedin_with_link(match):
+            linkedin_text = match.group(1)
+            
+            if linkedin_url:
+                # Erstelle LinkedIn-Hyperlink im ReportLab-Format
+                return f'<a href="{linkedin_url}" color="blue">{linkedin_text}</a>'
+            else:
+                # Kein Link verfügbar, verwende normalen Text
+                return linkedin_text
+        
+        # Ersetze alle Projekt-Erwähnungen durch Links
+        processed_text = re.sub(github_project_pattern, replace_project_with_link, paragraph_text)
+        
+        # Ersetze LinkedIn-Erwähnungen durch Links
+        processed_text = re.sub(linkedin_pattern, replace_linkedin_with_link, processed_text)
+        
+        return processed_text

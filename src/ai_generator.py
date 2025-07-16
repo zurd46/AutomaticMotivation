@@ -4,6 +4,7 @@ import logging
 from config.config import Config
 from src.models import JobInfo, JobDescription, MotivationLetter
 from src.github_project_extractor import GitHubProjectExtractor
+from src.linkedin_extractor import LinkedInExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ class AIGenerator:
         self.config = Config.get_llm_config()
         self.llm = self._initialize_llm()
         self.github_extractor = GitHubProjectExtractor()
+        self.linkedin_extractor = LinkedInExtractor()
         
     def _initialize_llm(self):
         """Initialisiert das LLM basierend auf der Konfiguration"""
@@ -169,6 +171,14 @@ class AIGenerator:
             except Exception as e:
                 logger.error(f"Fehler beim Abrufen von GitHub-Projekten: {e}")
         
+        # Hole LinkedIn-Informationen
+        linkedin_info = ""
+        try:
+            linkedin_info = self.linkedin_extractor.format_profile_for_application(job_description.requirements)
+            logger.info("LinkedIn-Profil-Informationen erfolgreich geladen")
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen von LinkedIn-Informationen: {e}")
+        
         prompt = f"""
         Erstelle ein professionelles Motivationsschreiben für folgende Stellenausschreibung:
 
@@ -190,11 +200,15 @@ class AIGenerator:
         BEWERBER-INFORMATIONEN:
         Name: {personal_info['name']}
         GitHub: {personal_info['github']}
+        LinkedIn: {Config.PERSONAL_LINKEDIN}
         Erfahrung: {personal_info['experience']}
         Fähigkeiten: {personal_info['skills']}
 
         RELEVANTE GITHUB-PROJEKTE:
         {project_descriptions if project_descriptions else 'Keine spezifischen Projekte verfügbar'}
+
+        LINKEDIN-PROFIL-INFORMATIONEN:
+        {linkedin_info if linkedin_info else 'Keine LinkedIn-Informationen verfügbar'}
 
         ANREDE:
         Verwende EXAKT diese Anrede: "{salutation}"
@@ -212,7 +226,7 @@ class AIGenerator:
         10. WICHTIG: Schreibe KEINEN Namen am Ende des Textes
         11. WICHTIG: Beginne das Schreiben mit der angegebenen Anrede "{salutation}"
         
-        SPEZIFISCHE VERBESSERUNGEN - VERWENDE DIE GITHUB-PROJEKTE:
+        SPEZIFISCHE VERBESSERUNGEN - VERWENDE DIE GITHUB-PROJEKTE UND LINKEDIN-INFORMATIONEN:
         12. Erwähne KONKRETE PROJEKTE aus der Liste oben mit spezifischen Technologien und messbaren Erfolgen
         13. Nenne KONKRETE ERFOLGE mit Kennzahlen (z.B. "Reduzierung der Prozesszeit um 40%", "Steigerung der Effizienz um 30%", "Verbesserung der Genauigkeit um 25%")
         14. Betone TEAMARBEIT und BERATUNGSERFAHRUNG mit konkreten Beispielen (z.B. "In interdisziplinären Teams von 5 Entwicklern leitete ich...", "Durch enge Zusammenarbeit mit 3 Stakeholdern...", "Als Berater unterstützte ich 10+ Kunden bei...")
@@ -227,13 +241,25 @@ class AIGenerator:
         23. Erwähne AGILE/SCRUM Erfahrung falls relevant
         24. Betone KOMMUNIKATIONSFÄHIGKEITEN mit Beispielen (Präsentationen, Workshops, Schulungen)
         25. Zeige KUNDENORIENTIERUNG durch konkrete Kundenprojekte oder -feedback
+        26. NUTZE LINKEDIN-ZERTIFIKATE als Qualifikationsnachweis (z.B. "Meine Zertifizierung als AWS Cloud Practitioner unterstreicht meine Kompetenz in...")
+        27. REFERENZIERE LINKEDIN-PROFIL als Verweis auf weitere Qualifikationen (z.B. "Weitere Details zu meiner Berufserfahrung finden Sie in meinem LinkedIn-Profil")
+        28. VERWENDE LINKEDIN-SKILLS passend zur Stellenausschreibung
+        29. INTEGRIERE LINKEDIN-BERUFSERFAHRUNG in die Argumentation
+        30. ERWÄHNE LINKEDIN-SPRACHEN falls relevant für die Position
 
         BEISPIEL-INTEGRATION VON GITHUB-PROJEKTEN MIT KONKRETEN ERFOLGEN:
         - "In meinem Projekt 'AutomaticMotivation' entwickelte ich mit Python und OpenAI eine KI-basierte Lösung zur Automatisierung von Bewerbungsprozessen, die die Bearbeitungszeit um 60% reduzierte und die Erfolgsquote um 35% steigerte"
-        - "Durch die Entwicklung von 'ZurdLLMWS' mit Python und LangChain konnte ich ein automatisiertes Webscraping-System erstellen, das die Datenerfassung um 80% beschleunigte und 15 Unternehmen bei der Prozessoptimierung unterstützte"
-        - "In einem interdisziplinären Team von 4 Entwicklern leitete ich das Projekt 'Auto-search-jobs-to-Email', welches durch Machine Learning-Algorithmen die Jobsuche automatisierte und über 200 Nutzer dabei unterstützte, passende Stellenangebote zu finden"
-        - "Als technischer Berater begleitete ich 8 Kunden bei der Implementierung von KI-Lösungen, wobei ich durch Workshop-Formate und Präsentationen komplexe technische Konzepte verständlich vermittelte"
+        - "Durch die Entwicklung von 'ZurdLLMWS' mit Python und LangChain konnte ich ein automatisiertes Webscraping-System erstellen, das die Datenerfassung um 80% beschleunigte und bei der Prozessoptimierung unterstützte"
+        - "In einem interdisziplinären Team leitete ich das Projekt 'Auto-search-jobs-to-Email', welches durch Machine Learning-Algorithmen die Jobsuche automatisierte und viele Nutzer dabei unterstützte, passende Stellenangebote zu finden"
+        - "Als technischer Berater begleitete ich verschiedene Kunden bei der Implementierung von KI-Lösungen, wobei ich durch Workshop-Formate und Präsentationen komplexe technische Konzepte verständlich vermittelte"
         - "Die Herausforderung der manuellen Datenverarbeitung löste ich durch die Implementierung eines Python-basierten Automatisierungssystems, was zu einer Kostenreduktion von 25% und einer Fehlerreduktion um 90% führte"
+        
+        WICHTIG: Erwähne NIEMALS spezifische Unternehmensnamen aus der LinkedIn-Berufserfahrung. Verwende stattdessen:
+        - "In meiner beruflichen Laufbahn..."
+        - "In verschiedenen Projekten..."
+        - "Als Consultant..."
+        - "In meiner Rolle als..."
+        - "Bei meinen bisherigen Tätigkeiten..."
 
         Schreibe NUR den Inhalt des Motivationsschreibens, ohne Kopf- oder Fußzeilen, ohne Grußformel und ohne Signatur.
         Das Schreiben MUSS mit der Anrede "{salutation}" beginnen und mit dem letzten inhaltlichen Absatz enden.

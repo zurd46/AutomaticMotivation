@@ -12,8 +12,14 @@ from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml.shared import OxmlElement, qn
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls, qn
 from src.models import MotivationLetter
+from config.config import Config
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DocxGenerator:
     """Klasse zur Erstellung von DOCX-Dokumenten für Motivationsschreiben"""
@@ -236,7 +242,7 @@ class DocxGenerator:
         salutation_run.font.name = 'Arial'
     
     def _add_main_content(self, doc: Document, motivation_letter: MotivationLetter):
-        """Fügt Hauptinhalt hinzu"""
+        """Fügt Hauptinhalt hinzu mit GitHub-Projekt-Hyperlinks"""
         # Motivationsschreiben in Absätze aufteilen
         paragraphs = motivation_letter.content.split('\n\n')
         
@@ -253,14 +259,175 @@ class DocxGenerator:
                     continue
                 
                 content_paragraph = doc.add_paragraph()
-                content_run = content_paragraph.add_run(cleaned_text)
-                content_run.font.size = Pt(11)
-                content_run.font.name = 'Arial'
+                
+                # Prüfe auf GitHub-Projekt-Erwähnungen und erstelle Hyperlinks
+                self._add_text_with_github_links(content_paragraph, cleaned_text)
                 
                 # Zeilenabstand setzen
                 paragraph_format = content_paragraph.paragraph_format
                 paragraph_format.space_after = Pt(6)
                 paragraph_format.line_spacing = 1.15
+    
+    def _add_text_with_github_links(self, paragraph, text):
+        """Fügt Text mit GitHub-Projekt-Hyperlinks und LinkedIn-Links hinzu"""
+        # Regex-Pattern für GitHub-Projekt-Erwähnungen
+        # Sucht nach GitHub-Projektnamen direkt
+        github_project_pattern = r'\b(ZurdLLMWS|AutomaticMotivation|Auto-search-jobs)\b'
+        
+        # Regex-Pattern für LinkedIn-Erwähnungen
+        # Sucht nach: "LinkedIn-Profil" oder "LinkedIn Profil"
+        linkedin_pattern = r"(LinkedIn[\s\-]?Profil)"
+        
+        # Verarbeite zuerst GitHub-Projekte, dann LinkedIn
+        processed_text = text
+        
+        # GitHub-Projekt-Links verarbeiten
+        def replace_project_with_link(match):
+            project_name = match.group(1)    # "ProjectName"
+            
+            # GitHub-URL für das Projekt suchen
+            github_url = self._get_github_url_for_project(project_name)
+            
+            if github_url:
+                return f'GITHUB_LINK:{project_name}:{github_url}'
+            else:
+                return project_name
+        
+        # LinkedIn-Links verarbeiten
+        def replace_linkedin_with_link(match):
+            linkedin_text = match.group(1)
+            linkedin_url = Config.PERSONAL_LINKEDIN
+            if linkedin_url:
+                return f'LINKEDIN_LINK:{linkedin_text}:{linkedin_url}'
+            else:
+                return linkedin_text
+        
+        # Ersetze GitHub-Projekte
+        processed_text = re.sub(github_project_pattern, replace_project_with_link, processed_text)
+        
+        # Ersetze LinkedIn-Erwähnungen
+        processed_text = re.sub(linkedin_pattern, replace_linkedin_with_link, processed_text)
+        
+        # Jetzt den Text mit den Markierungen verarbeiten
+        self._process_text_with_links(paragraph, processed_text)
+    
+    def _process_text_with_links(self, paragraph, text):
+        """Verarbeitet Text mit GitHub- und LinkedIn-Link-Markierungen"""
+        # Split text by link markers - berücksichtigt URLs mit ://
+        parts = re.split(r'(GITHUB_LINK:[^:]+:https?://[^\s]+|LINKEDIN_LINK:[^:]+:https?://[^\s]+)', text)
+        
+        for part in parts:
+            if part.startswith('GITHUB_LINK:'):
+                # Extract GitHub link info
+                try:
+                    _, link_text, url = part.split(':', 2)
+                    self._add_hyperlink(paragraph, link_text, url)
+                except ValueError:
+                    # Fallback bei Parsing-Fehlern
+                    run = paragraph.add_run(part)
+                    run.font.size = Pt(11)
+                    run.font.name = 'Arial'
+            elif part.startswith('LINKEDIN_LINK:'):
+                # Extract LinkedIn link info
+                try:
+                    _, link_text, url = part.split(':', 2)
+                    self._add_hyperlink(paragraph, link_text, url)
+                except ValueError:
+                    # Fallback bei Parsing-Fehlern
+                    run = paragraph.add_run(part)
+                    run.font.size = Pt(11)
+                    run.font.name = 'Arial'
+            else:
+                # Regular text
+                if part:
+                    run = paragraph.add_run(part)
+                    run.font.size = Pt(11)
+                    run.font.name = 'Arial'
+    
+    def _extract_github_projects_from_text(self, text):
+        """Extrahiert GitHub-Projektnamen aus dem Text"""
+        # Diese Methode könnte erweitert werden, um dynamisch Projekte zu erkennen
+        common_projects = ['AutomaticMotivation', 'ZurdLLMWS', 'Auto-search-jobs']
+        found_projects = []
+        
+        for project in common_projects:
+            if project in text:
+                found_projects.append(project)
+        
+        return found_projects
+    
+    def _get_github_url_for_project(self, project_name):
+        """Gibt die GitHub-URL für ein Projekt zurück"""
+        # Verwende Config für dynamische URL-Generierung
+        project_urls = Config.get_github_project_urls()
+        return project_urls.get(project_name)
+    
+    def _add_hyperlink(self, paragraph, text, url):
+        """Fügt einen Hyperlink zu einem Absatz hinzu"""
+        try:
+            # Validiere die URL
+            if not url or not url.startswith(('http://', 'https://')):
+                # Fallback: Normaler Text wenn URL ungültig
+                run = paragraph.add_run(text)
+                run.font.size = Pt(11)
+                run.font.name = 'Arial'
+                return
+            
+            # Neue Hyperlink-Relation erstellen
+            part = paragraph.part
+            r_id = part.relate_to(url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink", is_external=True)
+            
+            # Hyperlink-XML erstellen
+            hyperlink = OxmlElement('w:hyperlink')
+            hyperlink.set(qn('r:id'), r_id)
+            
+            # Run-Element für den Hyperlink-Text
+            run = OxmlElement('w:r')
+            
+            # Run-Properties für blaue Farbe und Unterstreichung
+            run_props = OxmlElement('w:rPr')
+            
+            # Font-Familie
+            font_family = OxmlElement('w:rFonts')
+            font_family.set(qn('w:ascii'), 'Arial')
+            font_family.set(qn('w:hAnsi'), 'Arial')
+            run_props.append(font_family)
+            
+            # Schriftgröße
+            font_size = OxmlElement('w:sz')
+            font_size.set(qn('w:val'), '22')  # 11pt * 2
+            run_props.append(font_size)
+            
+            # Blaue Farbe
+            color = OxmlElement('w:color')
+            color.set(qn('w:val'), '0000FF')  # Blau
+            run_props.append(color)
+            
+            # Unterstreichung
+            underline = OxmlElement('w:u')
+            underline.set(qn('w:val'), 'single')
+            run_props.append(underline)
+            
+            run.append(run_props)
+            
+            # Text-Element
+            text_elem = OxmlElement('w:t')
+            text_elem.text = text
+            run.append(text_elem)
+            
+            hyperlink.append(run)
+            paragraph._p.append(hyperlink)
+            
+            logger.info(f"Hyperlink erstellt: {text} -> {url}")
+            
+        except Exception as e:
+            logger.error(f"Fehler bei Hyperlink-Erstellung für {text}: {e}")
+            # Fallback: Normaler Text wenn Hyperlink fehlschlägt
+            run = paragraph.add_run(text)
+            run.font.size = Pt(11)
+            run.font.name = 'Arial'
+            run.font.size = Pt(11)
+            run.font.name = 'Arial'
     
     def _add_closing(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Grußformel hinzu"""
