@@ -184,6 +184,26 @@ class DocxGenerator:
                     address_format.space_after = Pt(0)
                     address_format.space_before = Pt(0)
                     address_format.line_spacing = 1.0
+        
+        # Kontaktperson (falls vorhanden und nicht gleich Firmenname)
+        if (motivation_letter.recipient_name and 
+            motivation_letter.recipient_name != "Nicht angegeben" and 
+            motivation_letter.recipient_name != motivation_letter.recipient_company):
+            
+            # Leerzeile vor Kontaktperson
+            doc.add_paragraph()
+            
+            # Kontaktperson mit "z.H." Präfix
+            contact_paragraph = doc.add_paragraph()
+            contact_run = contact_paragraph.add_run(f"z.H. {motivation_letter.recipient_name}")
+            contact_run.font.size = Pt(11)
+            contact_run.font.name = 'Aptos Display'
+            
+            # Zeilenabstand für Kontaktperson
+            contact_format = contact_paragraph.paragraph_format
+            contact_format.space_after = Pt(0)
+            contact_format.space_before = Pt(0)
+            contact_format.line_spacing = 1.0
     
     def _add_date_location(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Datum und Ort hinzu"""

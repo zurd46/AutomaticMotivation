@@ -6,6 +6,7 @@ from src.models import JobInfo, JobDescription, MotivationLetter
 from src.github_project_extractor import GitHubProjectExtractor
 from src.linkedin_extractor import LinkedInExtractor
 from src.intelligent_job_analyzer import IntelligentJobAnalyzer, JobCategory
+from src.recipient_controller import RecipientController
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ class AIGenerator:
         self.github_extractor = GitHubProjectExtractor()
         self.linkedin_extractor = LinkedInExtractor()
         self.job_analyzer = IntelligentJobAnalyzer()
+        self.recipient_controller = RecipientController()
         
     def _initialize_llm(self):
         """Initialisiert das LLM basierend auf der Konfiguration"""
@@ -52,6 +54,12 @@ class AIGenerator:
             # Bestimme Geschlecht und Nachname aus dem Namen
             contact_name = job_description.contact_person.strip()
             
+            # Prüfe, ob Kontaktperson ein Firmenname ist (gleich company oder enthält typische Firmen-Wörter)
+            if (contact_name.lower() == job_description.company.lower() or
+                any(word in contact_name.lower() for word in ['ag', 'gmbh', 'ltd', 'inc', 'corp', 'solutions', 'technologies', 'services', 'group', 'company', 'enterprises'])):
+                # Firmenname als Kontaktperson -> generische Anrede
+                return "Sehr geehrte Damen und Herren,"
+            
             # Erweiterte Geschlechtserkennung für häufige deutsche Vornamen
             male_names = ['Jan', 'Max', 'Alexander', 'Michael', 'Andreas', 'Thomas', 'Christian', 'Daniel', 'Stefan', 'Markus', 'Johannes', 'Sebastian', 'Matthias', 'Florian', 'Tobias']
             female_names = ['Anna', 'Maria', 'Julia', 'Laura', 'Sarah', 'Lisa', 'Katharina', 'Sandra', 'Nicole', 'Petra', 'Sabine', 'Andrea', 'Stephanie', 'Christina', 'Melanie']
@@ -74,8 +82,13 @@ class AIGenerator:
                     else:
                         return f"Sehr geehrter Herr {last_name},"
             else:
-                # Nur ein Name gegeben
-                return f"Sehr geehrte/r {contact_name},"
+                # Nur ein Name gegeben - prüfe ob es ein Firmenname sein könnte
+                if any(word in contact_name.lower() for word in ['team', 'hr', 'human', 'resources', 'recruiting', 'personal']):
+                    # Generische Kontaktperson
+                    return "Sehr geehrte Damen und Herren,"
+                else:
+                    # Einzelner Name - verwende generische Anrede
+                    return "Sehr geehrte Damen und Herren,"
         else:
             # Keine Kontaktperson angegeben
             return "Sehr geehrte Damen und Herren,"
@@ -97,11 +110,21 @@ class AIGenerator:
             if personal_info is None:
                 personal_info = Config.get_personal_info()
             
-            # Intelligente Stellenanalyse durchführen (vor Prompt-Erstellung)
+            # Normalisiere Empfänger-Informationen vor der Verarbeitung
+            normalized_job_description = self.recipient_controller.normalize_recipient_info(job_description)
+            recipient_validation = self.recipient_controller.validate_recipient_info(job_description)
+            
+            # Logge Validierungsergebnisse
+            if recipient_validation['warnings']:
+                logger.warning(f"Empfänger-Informationen Warnungen: {recipient_validation['warnings']}")
+            if recipient_validation['recommendations']:
+                logger.info(f"Empfänger-Informationen Empfehlungen: {recipient_validation['recommendations']}")
+            
+            # Intelligente Stellenanalyse durchführen (mit normalisierten Daten)
             job_analysis = self.job_analyzer.analyze_job(
-                job_description.position,
-                job_description.description,
-                job_description.requirements
+                normalized_job_description.position,
+                normalized_job_description.description,
+                normalized_job_description.requirements
             )
             
             # Speichere die Analyse für späteren Zugriff
@@ -109,8 +132,8 @@ class AIGenerator:
             
             logger.info(f"Stellenanalyse: {job_analysis['category'].value} (Confidence: {job_analysis['analysis_confidence']:.2f})")
             
-            # Prompt für die Motivationsschreiben-Generierung
-            prompt = self._create_motivation_prompt(job_description, personal_info)
+            # Prompt für die Motivationsschreiben-Generierung (mit normalisierten Daten)
+            prompt = self._create_motivation_prompt(normalized_job_description, personal_info)
             
             # LLM-Aufruf mit neuer invoke Methode
             messages = [
@@ -139,17 +162,17 @@ class AIGenerator:
                 else:
                     logger.info("IT-Support-Stelle: Keine GitHub-Projekt-Erwähnungen im Content gefunden")
             
-            # MotivationLetter-Objekt erstellen
+            # MotivationLetter-Objekt erstellen (mit normalisierten Daten)
             # Subject mit Position und Arbeitszeit kombinieren
-            position_with_hours = job_description.position
-            if job_description.working_hours and job_description.working_hours != "Nicht angegeben":
-                position_with_hours = f"{job_description.position} {job_description.working_hours}"
+            position_with_hours = normalized_job_description.position
+            if normalized_job_description.working_hours and normalized_job_description.working_hours != "Nicht angegeben":
+                position_with_hours = f"{normalized_job_description.position} {normalized_job_description.working_hours}"
             
             motivation_letter = MotivationLetter(
-                recipient_company=job_description.company,
-                recipient_company_address=job_description.address,
-                recipient_name=job_description.contact_person or job_description.company,
-                recipient_address=job_description.location,  # Nutze location für Kontaktperson-Adresse
+                recipient_company=normalized_job_description.company,
+                recipient_company_address=normalized_job_description.address,
+                recipient_name=normalized_job_description.contact_person or normalized_job_description.company,
+                recipient_address=normalized_job_description.location,  # Nutze location für Kontaktperson-Adresse
                 subject=f"Bewerbung als {position_with_hours}",
                 content=content,
                 sender_name=personal_info["name"],
