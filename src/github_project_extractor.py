@@ -246,7 +246,7 @@ class GitHubProjectExtractor:
             max_projects: Maximale Anzahl von Projekten
             
         Returns:
-            Liste der relevantesten Projekte
+            Liste der relevantesten Projekte (kann leer sein, wenn keine passenden Projekte gefunden werden)
         """
         try:
             if not projects:
@@ -268,7 +268,7 @@ class GitHubProjectExtractor:
             projects_text = '\n'.join(project_overview)
             
             prompt = f"""
-            Analysiere die folgenden GitHub-Projekte und wähle die {max_projects} relevantesten für eine Bewerbung aus:
+            Analysiere die folgenden GitHub-Projekte und bewerte ihre Relevanz für die Stellenbewerbung:
 
             STELLENPOSITION: {job_position}
             STELLENANFORDERUNGEN: {job_requirements}
@@ -277,30 +277,45 @@ class GitHubProjectExtractor:
             {projects_text}
 
             AUFGABE:
-            Wähle die {max_projects} relevantesten Projekte aus, die am besten zur Stellenposition und den Anforderungen passen.
+            Bewerte jedes Projekt auf Relevanz für diese spezifische Stelle. Berücksichtige dabei:
+            1. Technische Relevanz (Programmiersprachen, Frameworks, Tools)
+            2. Fachliche Relevanz (Projekttyp, Anwendungsbereich)
+            3. Stellenrelevanz (passt das Projekt wirklich zur ausgeschriebenen Position?)
             
-            Berücksichtige dabei:
-            1. Technische Relevanz (Programmiersprachen, Frameworks)
-            2. Fachliche Relevanz (Projekttyp, Branche)
-            3. Projektqualität (Beschreibung, Sterne, Topics)
-            4. Vielfalt (verschiedene Aspekte der Fähigkeiten zeigen)
+            WICHTIG: 
+            - Nur wirklich relevante Projekte auswählen
+            - Wenn KEINE Projekte zur Stelle passen, antworte mit "KEINE"
+            - Für IT-Support-Stellen: Nur Projekte mit Support-Tools, Automatisierung, oder Benutzer-Tools
+            - Für Entwickler-Stellen: Nur Projekte mit passenden Technologien
+            - Für Data Science: Nur Projekte mit Datenanalyse, ML, etc.
 
             ANTWORT-FORMAT:
-            Gib NUR die Nummern der ausgewählten Projekte zurück, getrennt durch Kommata.
+            Wenn relevante Projekte gefunden wurden:
+            Gib NUR die Nummern der max. {max_projects} relevantesten Projekte zurück, getrennt durch Kommata.
             Beispiel: 1, 3, 7
+            
+            Wenn KEINE Projekte relevant sind:
+            Gib nur "KEINE" zurück.
             """
             
             messages = [
                 SystemMessage(content="""Du bist ein Experte für die Auswahl relevanter Projekte für Bewerbungen. 
-                Wähle die Projekte aus, die am besten zur Stellenposition passen und die Fähigkeiten des Bewerbers optimal präsentieren."""),
+                Wähle nur Projekte aus, die wirklich zur Stellenposition passen. Wenn keine Projekte passen, 
+                ist es besser, KEINE auszuwählen als unpassende Projekte zu forcieren."""),
                 HumanMessage(content=prompt)
             ]
             
             response = self.llm.invoke(messages)
+            response_content = response.content.strip()
+            
+            # Prüfe, ob keine relevanten Projekte gefunden wurden
+            if response_content.upper() == "KEINE":
+                logger.info("Keine relevanten GitHub-Projekte für diese Stelle gefunden")
+                return []
             
             # Parse die Antwort
             selected_numbers = []
-            for num in response.content.strip().split(','):
+            for num in response_content.split(','):
                 try:
                     selected_numbers.append(int(num.strip()) - 1)  # -1 für 0-basierte Indexierung
                 except ValueError:
@@ -312,13 +327,18 @@ class GitHubProjectExtractor:
                 if 0 <= idx < len(projects[:20]):
                     selected_projects.append(projects[idx])
             
-            logger.info(f"Erfolgreich {len(selected_projects)} relevante Projekte ausgewählt")
+            if selected_projects:
+                logger.info(f"Erfolgreich {len(selected_projects)} relevante Projekte ausgewählt")
+            else:
+                logger.info("Keine relevanten Projekte nach Parsing gefunden")
+            
             return selected_projects[:max_projects]
             
         except Exception as e:
             logger.error(f"Fehler bei der Projektauswahl: {e}")
-            # Fallback: Nimm die ersten 3 Projekte mit den meisten Sternen
-            return projects[:max_projects]
+            # Fallback: Keine Projekte zurückgeben statt unpassende
+            logger.info("Fallback: Keine Projekte ausgewählt aufgrund von Fehler")
+            return []
     
     def format_projects_for_application(self, projects: List[GitHubProject]) -> str:
         """

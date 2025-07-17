@@ -119,6 +119,9 @@ class JobExtractor:
                     self.logger.debug(f"Fehler beim Parsen von JSON-LD: {e}")
                     continue
             
+            # Erweiterte HTML-Extraktion mit Struktur-Erkennung
+            extracted_sections = self._extract_structured_sections(soup)
+            
             # Fallback: Überflüssige Tags entfernen
             for tag in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
                 tag.decompose()
@@ -131,11 +134,109 @@ class JobExtractor:
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             text = ' '.join(chunk for chunk in chunks if chunk)
             
+            # Kombiniere strukturierte Sections mit dem normalen Text
+            if extracted_sections:
+                combined_text = f"""
+                STRUKTURIERTE BEREICHE:
+                {extracted_sections}
+                
+                VOLLSTÄNDIGER TEXT:
+                {text}
+                """
+                return combined_text
+            
             return text
             
         except Exception as e:
             self.logger.error(f"Fehler bei der Textextraktion: {e}")
             raise
+    
+    def _extract_structured_sections(self, soup) -> str:
+        """Extrahiert strukturierte Bereiche aus HTML"""
+        try:
+            sections = []
+            
+            # Suche nach typischen Job-Bereichen
+            section_keywords = {
+                'requirements': ['anforderungen', 'voraussetzungen', 'qualifikationen', 'sie bringen mit', 'ihr profil', 'requirements', 'qualifications'],
+                'tasks': ['aufgaben', 'tätigkeiten', 'das erwartet sie', 'ihre aufgaben', 'responsibilities', 'tasks'],
+                'benefits': ['wir bieten', 'benefits', 'vorteile', 'unser angebot', 'das bieten wir'],
+                'company': ['über uns', 'unternehmen', 'about us', 'company', 'firma']
+            }
+            
+            # Suche nach Überschriften und Listen
+            for section_type, keywords in section_keywords.items():
+                section_content = self._find_section_content(soup, keywords)
+                if section_content:
+                    sections.append(f"{section_type.upper()}:\n{section_content}")
+            
+            return '\n\n'.join(sections)
+            
+        except Exception as e:
+            self.logger.debug(f"Fehler bei strukturierter Extraktion: {e}")
+            return ""
+    
+    def _find_section_content(self, soup, keywords) -> str:
+        """Findet Inhalte zu bestimmten Sektionen"""
+        try:
+            content_parts = []
+            
+            # Suche nach Überschriften mit Keywords
+            for keyword in keywords:
+                # Suche in verschiedenen Überschrift-Tags
+                for tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                    headers = soup.find_all(tag, string=re.compile(keyword, re.IGNORECASE))
+                    for header in headers:
+                        # Sammle nachfolgenden Content
+                        content = self._collect_following_content(header)
+                        if content:
+                            content_parts.append(content)
+                
+                # Suche in starken Texten und Spans
+                for tag in ['strong', 'b', 'span', 'div']:
+                    elements = soup.find_all(tag, string=re.compile(keyword, re.IGNORECASE))
+                    for element in elements:
+                        content = self._collect_following_content(element)
+                        if content:
+                            content_parts.append(content)
+            
+            return '\n'.join(content_parts)
+            
+        except Exception as e:
+            self.logger.debug(f"Fehler bei Section-Content-Suche: {e}")
+            return ""
+    
+    def _collect_following_content(self, element) -> str:
+        """Sammelt nachfolgenden Content nach einem Element"""
+        try:
+            content_parts = []
+            
+            # Sammle Geschwister-Elemente
+            for sibling in element.find_next_siblings():
+                if sibling.name in ['ul', 'ol']:
+                    # Listen sammeln
+                    list_items = []
+                    for li in sibling.find_all('li'):
+                        list_items.append(f"- {li.get_text(strip=True)}")
+                    if list_items:
+                        content_parts.append('\n'.join(list_items))
+                elif sibling.name in ['p', 'div']:
+                    text = sibling.get_text(strip=True)
+                    if text and len(text) > 20:  # Nur sinnvolle Texte
+                        content_parts.append(text)
+                elif sibling.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                    # Stoppe bei nächster Überschrift
+                    break
+                
+                # Begrenze auf 3 Geschwister-Elemente
+                if len(content_parts) >= 3:
+                    break
+            
+            return '\n'.join(content_parts)
+            
+        except Exception as e:
+            self.logger.debug(f"Fehler beim Sammeln von nachfolgendem Content: {e}")
+            return ""
             
     def _extract_structured_info(self, text: str, url: str) -> JobInfo:
         """Extrahiert strukturierte Informationen mit LLM"""
@@ -157,6 +258,12 @@ class JobExtractor:
             - Wenn der Arbeitsort "Basel" ist, verwende "Basel, Schweiz" als Adresse
             - Wenn "Datalynx AG" im Text erwähnt wird, verwende dies als Unternehmen
 
+            BESONDERE AUFMERKSAMKEIT FÜR ANFORDERUNGEN:
+            - Suche nach Abschnitten wie "Anforderungen", "Voraussetzungen", "Qualifikationen", "Sie bringen mit", "Requirements", "Ihr Profil"
+            - Suche nach Aufgaben/Tätigkeiten wie "Ihre Aufgaben", "Das erwartet Sie", "Responsibilities", "Tätigkeiten"
+            - Identifiziere ob es sich um IT-Support, Entwicklung, oder andere IT-Bereiche handelt
+            - Extrahiere technische Kenntnisse, Soft Skills, Ausbildung und Erfahrung separat
+
             Extrahiere folgende Informationen und gib sie in diesem Format zurück:
             
             UNTERNEHMEN: [Name des Unternehmens]
@@ -168,8 +275,8 @@ class JobExtractor:
             KONTAKT_TITEL: [Titel der Kontaktperson, z.B. "Team Lead Talent Acquisition"]
             EMAIL: [E-Mail-Adresse der Kontaktperson]
             TELEFON: [Telefonnummer der Kontaktperson]
-            BESCHREIBUNG: [Kurze Beschreibung der Position]
-            ANFORDERUNGEN: [Wichtigste Anforderungen]
+            BESCHREIBUNG: [Kurze Beschreibung der Position und Hauptaufgaben]
+            ANFORDERUNGEN: [Alle wichtigen Anforderungen, Qualifikationen und Voraussetzungen in einem zusammenhängenden Text]
             BENEFITS: [Angebotene Leistungen]
             ARBEITSZEIT: [Arbeitszeiten, falls genannt]
             GEHALT: [Gehaltsangaben, falls genannt]
@@ -179,6 +286,7 @@ class JobExtractor:
             - Nutze die oben genannten Datalynx-Kontaktdaten wenn es eine Datalynx-Position ist
             - Wenn keine spezifische Kontaktperson gefunden wird, schreibe "Nicht angegeben"
             - Bei Arbeitsort "Basel" verwende "Basel, Schweiz" als Adresse
+            - Für ANFORDERUNGEN: Fasse alle relevanten Qualifikationen, Kenntnisse und Erfahrungen zusammen
             """
             
             messages = [
@@ -229,20 +337,44 @@ class JobExtractor:
         try:
             info = {}
             lines = response.split('\n')
+            current_key = None
+            current_value = []
             
             for line in lines:
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
+                line = line.strip()
+                if not line:
+                    continue
                     
-                    if value and value != "Nicht angegeben":
-                        info[key] = value
-                    else:
-                        info[key] = None
+                # Prüfe ob die Zeile ein neues Feld beginnt
+                if ':' in line and any(key in line.upper() for key in ['UNTERNEHMEN', 'POSITION', 'BEREICH', 'STANDORT', 'ADRESSE', 'KONTAKTPERSON', 'KONTAKT_TITEL', 'EMAIL', 'TELEFON', 'BESCHREIBUNG', 'ANFORDERUNGEN', 'BENEFITS', 'ARBEITSZEIT', 'GEHALT']):
+                    # Speichere das vorherige Feld
+                    if current_key and current_value:
+                        value = ' '.join(current_value).strip()
+                        if value and value != "Nicht angegeben":
+                            info[current_key] = value
+                        else:
+                            info[current_key] = None
+                    
+                    # Starte neues Feld
+                    key, value = line.split(':', 1)
+                    current_key = key.strip()
+                    current_value = [value.strip()] if value.strip() else []
+                else:
+                    # Füge zur aktuellen Beschreibung hinzu
+                    if current_key and line:
+                        current_value.append(line)
+            
+            # Speichere das letzte Feld
+            if current_key and current_value:
+                value = ' '.join(current_value).strip()
+                if value and value != "Nicht angegeben":
+                    info[current_key] = value
+                else:
+                    info[current_key] = None
                         
             return info
             
         except Exception as e:
             self.logger.error(f"Fehler beim Parsen der LLM-Antwort: {e}")
+            self.logger.debug(f"Response content: {response}")
             return {}

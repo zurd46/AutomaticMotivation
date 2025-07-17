@@ -90,10 +90,7 @@ class DocxGenerator:
             # Leerzeile
             doc.add_paragraph()
             
-            # Anrede
-            self._add_salutation(doc, motivation_letter)
-            
-            # Hauptinhalt
+            # Hauptinhalt (Anrede ist bereits im Content enthalten)
             self._add_main_content(doc, motivation_letter)
             
             # Grußformel
@@ -209,67 +206,6 @@ class DocxGenerator:
         subject_run.font.name = 'Aptos Display'
         subject_run.bold = True
     
-    def _add_salutation(self, doc: Document, motivation_letter: MotivationLetter):
-        """Fügt Anrede hinzu"""
-        salutation_paragraph = doc.add_paragraph()
-        
-        # Verbesserte Anrede-Logik
-        salutation = "Sehr geehrte Damen und Herren,"
-        
-        if motivation_letter.recipient_name and motivation_letter.recipient_name != motivation_letter.recipient_company:
-            recipient_name = motivation_letter.recipient_name.strip()
-            recipient_lower = recipient_name.lower()
-            
-            # Überprüfe auf männliche Anrede - erweiterte Logik
-            if (recipient_lower.startswith('herr ') or 
-                recipient_lower.startswith('hr. ') or 
-                recipient_lower.startswith('mr. ') or
-                ' herr ' in recipient_lower or
-                recipient_lower.startswith('jan ') or  # Für Jan am Anfang
-                'jan ' in recipient_lower or  # Für Jan irgendwo
-                any(name in recipient_lower for name in ['schmitz-elsen', 'jan schmitz-elsen', 'schmitz', 'elsen'])):
-                
-                # Entferne Titel für saubere Anrede
-                clean_name = recipient_name
-                if recipient_name.lower().startswith('herr '):
-                    clean_name = recipient_name[5:]
-                elif recipient_name.lower().startswith('hr. '):
-                    clean_name = recipient_name[4:]
-                elif recipient_name.lower().startswith('mr. '):
-                    clean_name = recipient_name[4:]
-                
-                # Für Jan Schmitz-Elsen: Nur Nachname verwenden
-                if 'jan' in recipient_lower and 'schmitz-elsen' in recipient_lower:
-                    clean_name = "Schmitz-Elsen"
-                elif 'jan' in recipient_lower and 'schmitz' in recipient_lower:
-                    clean_name = "Schmitz-Elsen"
-                
-                salutation = f"Sehr geehrter Herr {clean_name},"
-            
-            # Überprüfe auf weibliche Anrede
-            elif (recipient_lower.startswith('frau ') or 
-                  recipient_lower.startswith('fr. ') or 
-                  recipient_lower.startswith('mrs. ') or
-                  recipient_lower.startswith('ms. ') or
-                  ' frau ' in recipient_lower):
-                
-                # Entferne Titel für saubere Anrede
-                clean_name = recipient_name
-                if recipient_name.lower().startswith('frau '):
-                    clean_name = recipient_name[5:]
-                elif recipient_name.lower().startswith('fr. '):
-                    clean_name = recipient_name[4:]
-                elif recipient_name.lower().startswith('mrs. '):
-                    clean_name = recipient_name[5:]
-                elif recipient_name.lower().startswith('ms. '):
-                    clean_name = recipient_name[4:]
-                
-                salutation = f"Sehr geehrte Frau {clean_name},"
-        
-        salutation_run = salutation_paragraph.add_run(salutation)
-        salutation_run.font.size = Pt(11)
-        salutation_run.font.name = 'Aptos Display'
-    
     def _add_main_content(self, doc: Document, motivation_letter: MotivationLetter):
         """Fügt Hauptinhalt hinzu mit GitHub-Projekt-Hyperlinks"""
         # Motivationsschreiben in Absätze aufteilen
@@ -277,15 +213,8 @@ class DocxGenerator:
         
         for paragraph_text in paragraphs:
             if paragraph_text.strip():
-                # Entferne doppelte Anreden aus dem Inhalt
+                # Entferne nur doppelte Anreden aus dem Inhalt, aber behalte die erste
                 cleaned_text = paragraph_text.strip()
-                
-                # Überspringe Absätze, die nur Anreden enthalten
-                if (cleaned_text.startswith('Sehr geehrte Damen und Herren') or
-                    cleaned_text.startswith('Sehr geehrter Herr') or
-                    cleaned_text.startswith('Sehr geehrte Frau') or
-                    cleaned_text in ['Sehr geehrte Damen und Herren,', 'Sehr geehrte Damen und Herren']):
-                    continue
                 
                 # Überspringe Grußformeln, da sie separat hinzugefügt werden
                 if (cleaned_text.startswith('Mit freundlichen Grüßen') or
@@ -294,6 +223,15 @@ class DocxGenerator:
                     cleaned_text.startswith('Freundliche Grüsse') or
                     cleaned_text in ['Mit freundlichen Grüßen', 'Mit freundlichen Grüssen']):
                     continue
+                
+                # Entferne auch Namen am Ende, die wie eine Signatur aussehen
+                # Prüfe, ob der Absatz nur aus einem Namen besteht (weniger als 4 Wörter)
+                words = cleaned_text.split()
+                if len(words) <= 3:
+                    # Prüfe, ob es sich um eine Signatur handelt
+                    # Typische Signaturen: "Daniel Zurmühle", "Ihr Daniel Zurmühle", etc.
+                    if any(word.lower() in ['daniel', 'zurmühle'] for word in words):
+                        continue
                 
                 content_paragraph = doc.add_paragraph()
                 
